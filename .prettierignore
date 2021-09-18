@@ -7,7 +7,6 @@ dist
 out
 public
 coverage
-vendor-*
 .vscode
 .cache
 node_modules

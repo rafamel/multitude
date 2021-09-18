@@ -9,8 +9,6 @@ dist
 out
 public
 coverage
-vendor-*
-.npmrc
 _test*
 
 # Environment Variables #

@@ -6,6 +6,7 @@ const {
   lift,
   exec,
   catches,
+  combine,
   write,
   mkdir
 } = require('kpo');
@@ -38,20 +39,21 @@ const tasks = {
       esnext: '../dist-src/push/index.js'
     })
   ),
+  tarball: riseup.tarball,
   docs: riseup.docs,
   fix: riseup.fix,
   lint: series(riseup.lintmd, riseup.lint),
-  test: series(
-    context({ args: 'test/es-observable/performance' }, riseup.node),
-    context({ args: 'test/es-observable/specification' }, riseup.node),
-    riseup.test
-  ),
+  test: {
+    perf: context({ args: ['test/es-observable/performance'] }, riseup.node),
+    spec: context({ args: ['test/es-observable/specification'] }, riseup.node),
+    jest: riseup.test
+  },
   commit: riseup.commit,
   release: context({ args: ['--no-verify'] }, riseup.release),
   distribute: riseup.distribute,
   validate: series(
     create(() => tasks.lint),
-    create(() => tasks.test),
+    create(() => combine({ include: ['test'] }, tasks)),
     lift({ purge: true, mode: 'audit' }, () => tasks),
     catches({ level: 'silent' }, exec('npm', ['outdated']))
   ),
