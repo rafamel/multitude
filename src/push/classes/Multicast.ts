@@ -39,8 +39,8 @@ export class Multicast<T = any, U extends T | void = T | void>
         obs.next(item);
         obs.complete();
       },
-      hooks,
-      options
+      options,
+      hooks
     );
   }
   public static from<T, U extends T | void = T | void>(
