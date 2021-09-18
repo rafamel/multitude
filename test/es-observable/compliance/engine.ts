@@ -33,8 +33,8 @@ export async function engine(
       try {
         await entry[1]();
       } catch (err) {
-        all.push(err);
-        local.push(err);
+        all.push(err as Error);
+        local.push(err as Error);
       }
       results.push([entry[0], local]);
     }

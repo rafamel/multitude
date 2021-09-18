@@ -26,7 +26,7 @@ export class Hooks<T = any> implements Push.Hooks<T> {
         subscription
       ]);
     } catch (err) {
-      this.onUnhandledError(err, subscription);
+      this.onUnhandledError(err as Error, subscription);
     }
   }
 }

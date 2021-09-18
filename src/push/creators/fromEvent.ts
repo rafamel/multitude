@@ -25,7 +25,7 @@ export function fromEvent(
       try {
         source.addEventListener(name as string, listener, capture);
       } catch (error) {
-        obs.error(error);
+        obs.error(error as Error);
       }
 
       return () => source.removeEventListener(name as string, listener);
@@ -41,7 +41,7 @@ export function fromEvent(
       try {
         source.addListener(name, listener);
       } catch (error) {
-        obs.error(error);
+        obs.error(error as Error);
       }
 
       return () => source.removeListener(name, listener);

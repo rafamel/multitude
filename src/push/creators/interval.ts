@@ -29,7 +29,7 @@ export function interval(
           clearInterval(interval);
         }
       } catch (err) {
-        obs.error(err);
+        obs.error(err as Error);
       }
     }, options.every || 0);
 

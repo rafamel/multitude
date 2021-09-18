@@ -46,13 +46,13 @@ export class Invoke {
           : null
       );
     } catch (err) {
-      hooks.onUnhandledError(err, subscription);
+      hooks.onUnhandledError(err as Error, subscription);
     } finally {
       if (action !== 'start') {
         try {
           subscription.unsubscribe();
         } catch (err) {
-          hooks.onUnhandledError(err, subscription);
+          hooks.onUnhandledError(err as Error, subscription);
         }
       }
     }
@@ -70,7 +70,7 @@ export class Invoke {
         method.call(item, payload);
       } catch (err) {
         if (TypeGuard.isEmpty(method)) continue;
-        else if (options.onError) options.onError(err);
+        else if (options.onError) options.onError(err as Error);
       }
       if (!options.multicast) break;
     }

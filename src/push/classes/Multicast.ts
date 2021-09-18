@@ -146,7 +146,7 @@ export class Multicast<T = any, U extends T | void = T | void>
           onCreate.call(hooks, connect);
         }
       } catch (err) {
-        this.#termination = [err];
+        this.#termination = [err as Error];
       }
     }
   }

@@ -15,7 +15,7 @@ export class Handler {
     try {
       if (tries) tries();
     } catch (err) {
-      if (catches) catches(err);
+      if (catches) catches(err as Error);
     } finally {
       if (finalizes) finalizes();
     }

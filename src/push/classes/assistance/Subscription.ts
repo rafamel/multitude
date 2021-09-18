@@ -28,13 +28,13 @@ class Subscription<T = any> implements Push.Subscription {
       const unsubscribe = subscriber(subscriptionObserver);
       fn = teardown(unsubscribe);
     } catch (err) {
-      subscriptionObserver.error(err);
+      subscriptionObserver.error(err as Error);
     } finally {
       if (SubscriptionManager.isClosed(this)) {
         try {
           fn();
         } catch (err) {
-          this.#hooks.onUnhandledError(err, this);
+          this.#hooks.onUnhandledError(err as Error, this);
         }
       } else {
         this.#teardown = fn;
@@ -56,7 +56,7 @@ class Subscription<T = any> implements Push.Subscription {
     try {
       teardown();
     } catch (err) {
-      this.#hooks.onUnhandledError(err, this);
+      this.#hooks.onUnhandledError(err as Error, this);
     }
   }
 }

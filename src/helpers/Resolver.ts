@@ -10,7 +10,7 @@ export class Resolver {
     try {
       response = fn();
     } catch (err) {
-      if (error) return error(err);
+      if (error) return error(err as Error);
       throw err;
     }
 

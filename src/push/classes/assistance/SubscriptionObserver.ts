@@ -37,7 +37,7 @@ class SubscriptionObserver<T = any> implements Push.SubscriptionObserver<T> {
       (method = observer.next).call(observer, value);
     } catch (err) {
       if (!TypeGuard.isEmpty(method)) {
-        this.#hooks.onUnhandledError(err, subscription);
+        this.#hooks.onUnhandledError(err as Error, subscription);
       }
     }
   }
