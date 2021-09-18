@@ -3,7 +3,7 @@ import assert from 'assert';
 import { catches, Observable } from '@push';
 import { into } from 'pipettes';
 
-test(`non error flow succeeds`, () => {
+test(`non error flow succeeds`, async () => {
   let catchesCalled = false;
 
   const obs = into(
@@ -30,16 +30,18 @@ test(`non error flow succeeds`, () => {
     complete: () => times[3]++
   });
 
+  await Promise.resolve();
   assert(!catchesCalled);
   assert(subscription.closed);
   assert.deepStrictEqual(values, [1, 2]);
   assert.deepStrictEqual(times, [1, 2, 0, 1]);
 });
-test(`error flow succeeds, error finalization`, () => {
+test(`error flow succeeds, error finalization`, async () => {
   const errors = [Error('foo'), Error('bar')];
 
   const args: any[] = [];
   const teardownCalled = [false, false];
+  let teardownCalledBeforeNextSubscription = false;
   const obs = into(
     new Observable<number>((obs) => {
       obs.next(1);
@@ -52,6 +54,9 @@ test(`error flow succeeds, error finalization`, () => {
     catches((reason, observable) => {
       args.push(reason, observable);
       return new Observable<number>((obs) => {
+        if (teardownCalled[0]) {
+          teardownCalledBeforeNextSubscription = true;
+        }
         obs.next(3);
         obs.next(4);
         obs.error(errors[1]);
@@ -78,14 +83,16 @@ test(`error flow succeeds, error finalization`, () => {
     complete: () => times[3]++
   });
 
+  await Promise.resolve();
   assert(subscription.closed);
   assert(reason === errors[1]);
   assert.deepStrictEqual(values, [1, 2, 3, 4]);
   assert.deepStrictEqual(times, [1, 4, 1, 0]);
   assert.deepStrictEqual(teardownCalled, [true, true]);
+  assert(teardownCalledBeforeNextSubscription);
 });
 
-test(`error flow succeeds, unsubscribe finalization`, () => {
+test(`error flow succeeds, unsubscribe finalization`, async () => {
   const args: any[] = [];
   const teardownCalled = [false, false];
   const obs = into(
@@ -121,10 +128,11 @@ test(`error flow succeeds, unsubscribe finalization`, () => {
     complete: () => times[3]++
   });
 
+  await Promise.resolve();
   subscription.unsubscribe();
 
   assert(subscription.closed);
-  assert.deepStrictEqual(values, [1, 2, 3, 4]);
   assert.deepStrictEqual(times, [1, 4, 0, 0]);
+  assert.deepStrictEqual(values, [1, 2, 3, 4]);
   assert.deepStrictEqual(teardownCalled, [true, true]);
 });
