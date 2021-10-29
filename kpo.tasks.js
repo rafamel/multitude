@@ -44,9 +44,8 @@ const tasks = {
   fix: riseup.fix,
   lint: series(riseup.lintmd, riseup.lint),
   test: {
-    perf: context({ args: ['test/es-observable/performance'] }, riseup.node),
     spec: context({ args: ['test/es-observable/specification'] }, riseup.node),
-    jest: riseup.test
+    suite: riseup.test
   },
   commit: riseup.commit,
   release: context({ args: ['--no-verify'] }, riseup.release),

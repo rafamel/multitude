@@ -1,5 +1,6 @@
 /* eslint-disable no-console */
 import chalk from 'chalk';
+import util from 'util';
 
 export type Test = null | [string, () => void | Promise<void>];
 export type Result = [string, Error[]];
@@ -17,14 +18,18 @@ export async function engine(
 ): Promise<Response> {
   const results: Result[] = [];
 
-  const log = console.log.bind(console);
-  const verbose: any[] = [];
+  const log = (...args: any): void => {
+    process.stdout.write(util.format(...args) + '\n');
+  };
 
-  if (logging !== 'raw') {
-    console.log = (...args: any[]): void => {
-      verbose.push(args);
-    };
-  }
+  const consoleLog = console.log;
+  const verbose: any[] = [];
+  console.log =
+    logging === 'raw'
+      ? log
+      : (...args: any[]): void => {
+          verbose.push(args);
+        };
 
   const all: Error[] = [];
   for (const entry of tests) {
@@ -40,7 +45,7 @@ export async function engine(
     }
   }
 
-  console.log = log;
+  console.log = consoleLog;
 
   if (logging !== 'silent') {
     if (all.length) log(chalk.bgRed.black(' FAIL ') + ` ${name}`);
