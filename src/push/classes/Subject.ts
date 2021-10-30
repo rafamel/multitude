@@ -1,23 +1,22 @@
 import { Push } from '@definitions';
-import { Accessor } from '@helpers';
 import { from } from '../creators/from';
 import { tap } from '../operators/tap';
-import { Multicast } from './Multicast';
+import { Observable } from './Observable';
 import { into } from 'pipettes';
 
-/** @ignore */
-const $observer = Symbol('observer');
-
 export declare namespace Subject {
-  export type Options<U> = Multicast.Options<U>;
+  export interface Options<U> {
+    /** Sets initial value; it won't be emitted. */
+    value?: U;
+  }
 }
 
 export class Subject<T = any, U extends T | void = T | void>
-  extends Multicast<T, U>
+  extends Observable<T>
   implements Push.Subject<T, U>
 {
-  public static of<T>(item: T, options?: Subject.Options<T>): Subject<T, T> {
-    const subject = new this<T, T>(options);
+  public static of<T>(item: T): Subject<T, T> {
+    const subject = new this<T, T>(item);
     subject.next(item);
     return subject;
   }
@@ -28,39 +27,61 @@ export class Subject<T = any, U extends T | void = T | void>
     if (item.constructor === this) return item;
 
     const observable = from(item);
-    const subject = new this(options);
+    const subject = new this<T, U>(options);
 
-    let subscription: any;
+    let subscription: null | Push.Subscription = null;
     into(observable, tap({ start: (subs) => (subscription = subs) })).subscribe(
       subject
     );
 
     subject.subscribe({
-      error: subscription.unsubscribe.bind(subscription),
-      complete: subscription.unsubscribe.bind(subscription)
+      error: () => (subscription ? subscription.unsubscribe() : undefined),
+      complete: () => (subscription ? subscription.unsubscribe() : undefined)
     });
 
     return subject;
   }
-  private [$observer]: Push.SubscriptionObserver<T>;
+  #value: T | U;
+  #closed: boolean;
+  #observers: Array<Push.SubscriptionObserver<T>>;
   public constructor(options?: Subject.Options<U>) {
-    let observer: any;
-    super(
-      (obs) => {
-        observer = obs;
-      },
-      options,
-      { onCreate: (connect) => connect() }
-    );
-    Accessor.define(this, $observer, observer);
+    const observers: Array<Push.SubscriptionObserver<T>> = [];
+    super((obs) => {
+      observers.push(obs);
+      return () => {
+        const index = observers.indexOf(obs);
+        if (index >= 0) observers.splice(index, 1);
+      };
+    });
+    this.#value = (options ? options.value : undefined) as U;
+    this.#closed = false;
+    this.#observers = observers;
+  }
+  public [Symbol.observable](): Observable<T> {
+    return Observable.from(this);
+  }
+  public get value(): T | U {
+    return this.#value;
+  }
+  public get closed(): boolean {
+    return this.#closed;
   }
   public next(value: T): void {
-    return this[$observer].next(value);
+    this.#value = value;
+    for (const observer of this.#observers) {
+      observer.next(value);
+    }
   }
   public error(error: Error): void {
-    return this[$observer].error(error);
+    this.#closed = true;
+    for (const observer of this.#observers) {
+      observer.error(error);
+    }
   }
   public complete(): void {
-    return this[$observer].complete();
+    this.#closed = true;
+    for (const observer of this.#observers) {
+      observer.complete();
+    }
   }
 }

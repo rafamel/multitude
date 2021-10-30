@@ -35,15 +35,12 @@ export declare namespace Push {
     ): Subscription;
   }
 
-  export interface Multicast<T = any, U extends T | void = T | void>
-    extends Observable<T> {
+  export interface Subject<T = any, U extends T | void = T | void>
+    extends Observable<T>,
+      SubscriptionObserver<T> {
     value: T | U;
     closed: boolean;
   }
-
-  export type Subject<T = any, U extends T | void = T | void> = Observable<T> &
-    SubscriptionObserver<T> &
-    Multicast<T, U>;
 
   /* Observer */
   export interface ObserverLike<T = any> {

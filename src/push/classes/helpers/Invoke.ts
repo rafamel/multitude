@@ -81,13 +81,4 @@ export class Invoke {
       if (!options.multicast) break;
     }
   }
-  public static subscriptionObservers(
-    action: Exclude<keyof Push.SubscriptionObserver, 'closed'>,
-    payload: any,
-    items: Set<Push.SubscriptionObserver>
-  ): void {
-    for (const item of items) {
-      item[action](payload);
-    }
-  }
 }

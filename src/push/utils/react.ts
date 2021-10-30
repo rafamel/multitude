@@ -1,6 +1,5 @@
 import { Push } from '@definitions';
 import { from } from '../creators/from';
-import { Multicast } from '../classes/Multicast';
 import { NullaryFn, TypeGuard, UnaryFn } from 'type-core';
 
 export interface ReactHooksDependency {
@@ -78,32 +77,33 @@ export function useObservable<T, U = ObservableHookResult<T> | null>(
   return store.response as U;
 }
 
-export function usePropsMulticast<P, R = P>(
-  React: ReactHooksDependency,
-  props: P,
-  projection?: UnaryFn<P, R>
-): Push.Multicast<R> {
-  const store = React.useMemo(() => {
-    let observer: any;
+// TODO
+// export function usePropsMulticast<P, R = P>(
+//   React: ReactHooksDependency,
+//   props: P,
+//   projection?: UnaryFn<P, R>
+// ): Push.Multicast<R> {
+//   const store = React.useMemo(() => {
+//     let observer: any;
 
-    const multicast = new Multicast(
-      (obs) => {
-        observer = obs;
-      },
-      { replay: true },
-      { onCreate: (connect) => connect() }
-    );
+//     const multicast = new Multicast(
+//       (obs) => {
+//         observer = obs;
+//       },
+//       { replay: true },
+//       { onCreate: (connect) => connect() }
+//     );
 
-    observer.next(projection ? projection(props) : props);
+//     observer.next(projection ? projection(props) : props);
 
-    return { props, observer, multicast };
-  }, []);
+//     return { props, observer, multicast };
+//   }, []);
 
-  if (props !== store.props) {
-    store.props = props;
-    const value = projection ? projection(props) : props;
-    if (value !== store.multicast.value) store.observer.next(value);
-  }
+//   if (props !== store.props) {
+//     store.props = props;
+//     const value = projection ? projection(props) : props;
+//     if (value !== store.multicast.value) store.observer.next(value);
+//   }
 
-  return store.multicast;
-}
+//   return store.multicast;
+// }
