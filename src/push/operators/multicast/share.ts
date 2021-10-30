@@ -1,10 +1,11 @@
 import { Push } from '@definitions';
-import { Multicast } from '../../classes/Multicast';
 import { transform } from '../../utils/transform';
-import { Empty, TypeGuard } from 'type-core';
+import { Observable } from '../../classes/Observable';
+import { shallow } from 'merge-strategies';
 
-export interface ShareOptions<U> extends Multicast.Options<U> {
+export interface ShareOptions {
   policy?: SharePolicy;
+  replay?: number;
 }
 
 /**
@@ -19,50 +20,73 @@ export type SharePolicy = 'on-demand' | 'keep-open' | 'keep-closed';
  * The original Observable won't be subscribed until there is at least
  * one subscriber.
  */
-export function share<T, U extends T | void = T | void>(
-  policy?: SharePolicy | ShareOptions<U>
-): Push.Transformation<T, Push.Multicast<T, U>> {
-  const options = !policy || TypeGuard.isString(policy) ? { policy } : policy;
+export function share<T>(
+  options?: ShareOptions
+): Push.Transformation<T, Push.Observable<T>> {
+  const opts = shallow(
+    { policy: 'on-demand', replay: 0 },
+    options || undefined
+  );
 
   return transform((observable) => {
-    let count = 0;
-    let observer: Push.SubscriptionObserver | Empty;
-    let subscription: Push.Subscription | Empty;
+    let values: T[] = [];
+    let subscription: null | Push.Subscription = null;
+    let termination: null | { error: any; complete: boolean } = null;
+    const observers: Set<Push.SubscriptionObserver> = new Set();
 
-    return new Multicast(
-      (obs) => {
-        observer = obs;
-        return observable.subscribe(obs);
-      },
-      options,
-      {
-        onSubscribe(connect) {
-          count++;
-          subscription = connect();
-        },
-        onUnsubscribe() {
-          count--;
-
-          if (count > 0) return;
-          switch (options.policy) {
-            case 'keep-open': {
-              return;
-            }
-            case 'keep-closed': {
-              if (observer && !observer.closed) {
-                const err = Error('Multicast is already closed');
-                observer.error(err);
-              }
-              if (subscription) subscription.unsubscribe();
-              return;
-            }
-            default: {
-              if (subscription) subscription.unsubscribe();
-              subscription = null;
-            }
-          }
-        }
+    return new Observable<T>((obs) => {
+      if (termination) {
+        return termination.complete
+          ? obs.complete()
+          : obs.error(termination.error);
       }
-    );
+
+      observers.add(obs);
+      values.forEach((value) => obs.next(value));
+
+      if (!subscription) {
+        observable.subscribe({
+          start(subs) {
+            subscription = subs;
+          },
+          next(value) {
+            if (opts.replay > 0) {
+              values.push(value);
+              if (opts.replay < values.length) values.shift();
+            }
+            observers.forEach((obs) => obs.next(value));
+          },
+          error(err) {
+            termination = { error: err, complete: false };
+            observers.forEach((obs) => obs.error(err));
+          },
+          complete() {
+            termination = { error: null, complete: true };
+            observers.forEach((obs) => obs.complete());
+          }
+        });
+      }
+
+      return () => {
+        observers.delete(obs);
+
+        if (observers.size > 0) return;
+
+        values = [];
+        if (opts.policy === 'keep-open') return;
+        if (opts.policy === 'keep-closed') {
+          if (!termination) {
+            termination = {
+              error: new Error('Shared observable was already closed'),
+              complete: false
+            };
+          }
+          subscription?.unsubscribe();
+        } else {
+          subscription?.unsubscribe();
+          subscription = null;
+        }
+      };
+    });
   });
 }

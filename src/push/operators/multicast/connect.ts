@@ -1,20 +1,27 @@
 import { Push } from '@definitions';
-import { Multicast } from '../../classes/Multicast';
+import { shallow } from 'merge-strategies';
 import { transform } from '../../utils/transform';
+import { share } from './share';
 
-export type ConnectOptions<U> = Multicast.Options<U>;
+export interface ConnectOptions {
+  replay?: number;
+}
 
 /**
  * Creates a new Observable that multicasts the original Observable.
  * The original Observable will be immediately subscribed,
  * and will continue to be even if there are no subscribers.
  */
-export function connect<T, U extends T | void = T | void>(
-  options?: ConnectOptions<U>
-): Push.Transformation<T, Push.Multicast<T, U>> {
-  return transform((source) => {
-    return Multicast.from(source, options, {
-      onCreate: (connect) => connect()
-    });
+export function connect<T>(
+  options?: ConnectOptions
+): Push.Transformation<T, Push.Observable<T>> {
+  const opts = shallow({ replay: 0 }, options || undefined);
+
+  return transform((observable) => {
+    const res = share<T>({ policy: 'keep-open', replay: opts.replay })(
+      observable
+    );
+    res.subscribe({ error: () => undefined });
+    return res;
   });
 }
