@@ -1,73 +1,128 @@
-import { test, expect } from '@jest/globals';
-import assert from 'assert';
-import { connect, interval, Multicast } from '@push';
-import { into } from 'pipettes';
+import { test } from '@jest/globals';
+import { connect } from '@push';
+import { setupObservable, setupObserver, waitTime } from '../../../setup';
 
-test(`returns Multicast`, () => {
-  const obs = into(interval({ every: 10, cancel: (i) => i >= 8 }), connect());
-  expect(obs).toBeInstanceOf(Multicast);
-});
-test(`succeeds wo/ replay`, async () => {
-  const obs = into(interval({ every: 300, cancel: (i) => i >= 8 }), connect());
-
-  const start = Date.now();
-  const to = (ms: number): number => start + ms - Date.now();
-
-  await new Promise((resolve) => setTimeout(resolve, to(1050)));
-
-  const values: any[] = [];
-  let subscription = obs.subscribe((value) => values.push(value));
-
-  await new Promise((resolve) => setTimeout(resolve, to(1650)));
-  subscription.unsubscribe();
-
-  await new Promise((resolve) => setTimeout(resolve, to(2250)));
-  subscription = obs.subscribe((value) => values.push(value));
-
-  await new Promise((resolve) => setTimeout(resolve, to(2850)));
-  subscription.unsubscribe();
-
-  await new Promise((resolve) => setTimeout(resolve, to(3450)));
-
-  let didComplete = false;
-  subscription = obs.subscribe({
-    complete: () => (didComplete = true)
-  });
-
-  assert(didComplete);
-  assert(subscription.closed);
-  assert.deepStrictEqual(values, [3, 4, 7, 8]);
-});
-test(`succeeds w/ replay`, async () => {
-  const obs = into(
-    interval({ every: 300, cancel: (i) => i >= 8 }),
-    connect({ replay: 1 })
+test(`subscriber is called on initialization`, () => {
+  const { assertObservableCalledTimes } = setupObservable(
+    { error: false },
+    connect()
   );
 
-  const start = Date.now();
-  const to = (ms: number): number => start + ms - Date.now();
+  assertObservableCalledTimes({ subscriber: 1, teardown: 0 });
+});
+test(`teardown is called on error/complete`, async () => {
+  for (const withError of [false, true]) {
+    const { termination, assertObservableCalledTimes } = setupObservable(
+      { error: withError },
+      connect()
+    );
 
-  await new Promise((resolve) => setTimeout(resolve, to(1050)));
+    await waitTime(termination);
+    assertObservableCalledTimes({ subscriber: 1, teardown: 1 });
+  }
+});
+test(`subscriber is not called on subscription`, () => {
+  const { observable, assertObservableCalledTimes } = setupObservable(
+    { error: false },
+    connect()
+  );
 
-  const values: any[] = [];
-  let subscription = obs.subscribe((value) => values.push(value));
+  observable.subscribe({ error: () => undefined }).unsubscribe();
+  observable.subscribe({ error: () => undefined });
+  assertObservableCalledTimes({ subscriber: 1, teardown: 0 });
+});
+test(`subscriber is not called after error/complete`, async () => {
+  for (const withError of [false, true]) {
+    const { observable, termination, assertObservableCalledTimes } =
+      setupObservable({ error: withError }, connect());
+    await waitTime(termination);
 
-  await new Promise((resolve) => setTimeout(resolve, to(1650)));
-  subscription.unsubscribe();
+    observable.subscribe({ error: () => undefined });
+    assertObservableCalledTimes({ subscriber: 1, teardown: 1 });
+  }
+});
+test(`teardown is called once on error/complete`, async () => {
+  for (const withError of [false, true]) {
+    const { observable, termination, assertObservableCalledTimes } =
+      setupObservable({ error: withError }, connect());
 
-  await new Promise((resolve) => setTimeout(resolve, to(2250)));
-  subscription = obs.subscribe((value) => values.push(value));
+    observable.subscribe({ error: () => undefined });
+    observable.subscribe({ error: () => undefined });
 
-  await new Promise((resolve) => setTimeout(resolve, to(2850)));
-  subscription.unsubscribe();
+    await waitTime(termination);
+    assertObservableCalledTimes({ subscriber: 1, teardown: 1 });
+  }
+});
+test(`subscriptions after error/complete immediately error/complete`, async () => {
+  for (const withError of [false, true]) {
+    const { observable, termination } = setupObservable(
+      { error: withError },
+      connect()
+    );
 
-  await new Promise((resolve) => setTimeout(resolve, to(3450)));
-  let didComplete = false;
-  subscription = obs.subscribe({
-    complete: () => (didComplete = true)
-  });
+    await waitTime(termination);
+    const { observer, assertObserverCalledTimes } = setupObserver();
 
-  assert(didComplete);
-  assert(subscription.closed);
-  assert.deepStrictEqual(values, [2, 3, 4, 6, 7, 8]);
+    observable.subscribe(observer);
+    assertObserverCalledTimes({
+      start: 1,
+      next: 0,
+      error: withError ? 1 : 0,
+      complete: withError ? 0 : 1
+    });
+  }
+});
+test(`observer calls propagate, wo/ replay`, async () => {
+  for (const withError of [false, true]) {
+    const { observable, timeline } = setupObservable(
+      { error: withError },
+      connect()
+    );
+
+    const { observer, assertObserverCalledTimes } = setupObserver();
+    observable.subscribe({ error: () => undefined }).unsubscribe();
+    observable.subscribe(observer);
+
+    let nSyncValues = 0;
+    for (const { ms, values, end } of timeline) {
+      if (ms.total === null) {
+        nSyncValues += values.add.length;
+      } else {
+        await waitTime(ms.add);
+        assertObserverCalledTimes({
+          start: 1,
+          next: values.total.length - nSyncValues,
+          error: withError ? end : 0,
+          complete: withError ? 0 : end
+        });
+      }
+    }
+  }
+});
+test(`observer calls propagate, w/ replay`, async () => {
+  for (const withError of [false, true]) {
+    const { observable, timeline } = setupObservable(
+      { error: withError },
+      connect({ replay: 2 })
+    );
+
+    const { observer, assertObserverCalledTimes } = setupObserver();
+    observable.subscribe({ error: () => undefined }).unsubscribe();
+    observable.subscribe(observer);
+
+    let nSyncValues = 0;
+    for (const { ms, values, end } of timeline) {
+      if (ms.total === null) {
+        nSyncValues += values.add.length;
+      } else {
+        await waitTime(ms.add);
+        assertObserverCalledTimes({
+          start: 1,
+          next: values.total.length - Math.max(0, nSyncValues - 2),
+          error: withError ? end : 0,
+          complete: withError ? 0 : end
+        });
+      }
+    }
+  }
 });

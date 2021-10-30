@@ -1,284 +1,489 @@
-import { test, expect } from '@jest/globals';
-import assert from 'assert';
-import { interval, Multicast, Observable, share } from '@push';
-import { into } from 'pipettes';
+import { test, expect, describe } from '@jest/globals';
+import { share, SharePolicy } from '@push';
+import { setupObservable, setupObserver, waitTime } from '../../../setup';
 
-test(`returns Multicast`, () => {
-  const obs = into(interval({ every: 10, cancel: (i) => i >= 8 }), share());
-  expect(obs).toBeInstanceOf(Multicast);
+const policies: SharePolicy[] = ['keep-open', 'keep-closed', 'on-demand'];
+
+describe(`no subscription`, () => {
+  test(`subscriber and teardown are not called on initialization`, () => {
+    for (const policy of [...policies, null]) {
+      const { assertObservableCalledTimes } = setupObservable(
+        { error: false },
+        policy ? share({ policy }) : share()
+      );
+
+      assertObservableCalledTimes({ subscriber: 0, teardown: 0 });
+    }
+  });
 });
-test(`succeeds w/ on-demand policy`, async () => {
-  const times = [0, 0, 0, 0, 0, 0];
-  const obs = into(
-    new Observable((obs) => {
-      times[0]++;
-      obs.next(1);
-      obs.next(2);
-      setTimeout(() => {
-        obs.next(3);
-        obs.complete();
-      }, 100);
-      return () => times[1]++;
-    }),
-    share()
-  );
 
-  assert.deepStrictEqual(times, [0, 0, 0, 0, 0, 0]);
+describe(`first subscription`, () => {
+  test(`subscriber is called`, () => {
+    for (const policy of policies) {
+      const { observable, assertObservableCalledTimes } = setupObservable(
+        { error: false },
+        share({ policy })
+      );
 
-  obs
-    .subscribe({
-      start: () => times[2]++,
-      next: () => times[3]++,
-      error: () => times[4]++,
-      complete: () => times[5]++
-    })
-    .unsubscribe();
-
-  assert.deepStrictEqual(times, [1, 1, 1, 2, 0, 0]);
-
-  const a = obs.subscribe({
-    start: () => times[2]++,
-    next: () => times[3]++,
-    error: () => times[4]++,
-    complete: () => times[5]++
+      observable.subscribe({ error: () => undefined });
+      assertObservableCalledTimes({ subscriber: 1, teardown: 0 });
+    }
   });
+  test(`teardown is called on error/complete`, async () => {
+    for (const policy of policies) {
+      for (const withError of [false, true]) {
+        const { observable, termination, assertObservableCalledTimes } =
+          setupObservable({ error: withError }, share({ policy }));
 
-  assert.deepStrictEqual(times, [2, 1, 2, 4, 0, 0]);
+        const subs1 = observable.subscribe({ error: () => undefined });
 
-  const b = obs.subscribe({
-    start: () => times[2]++,
-    next: () => times[3]++,
-    error: () => times[4]++,
-    complete: () => times[5]++
+        await waitTime(termination);
+        expect(subs1.closed).toBe(true);
+        assertObservableCalledTimes({ subscriber: 1, teardown: 1 });
+      }
+    }
   });
+  test(`observer calls propagate`, async () => {
+    for (const policy of policies) {
+      for (const withError of [false, true]) {
+        const { observable, timeline } = setupObservable(
+          { error: withError },
+          share({ policy })
+        );
+        const { observer, assertObserverCalledTimes } = setupObserver();
 
-  assert.deepStrictEqual(times, [2, 1, 3, 4, 0, 0]);
-  a.unsubscribe();
-  assert.deepStrictEqual(times, [2, 1, 3, 4, 0, 0]);
-
-  const c = obs.subscribe({
-    start: () => times[2]++,
-    next: () => times[3]++,
-    error: () => times[4]++,
-    complete: () => times[5]++
+        observable.subscribe(observer);
+        for (const { ms, values, end } of timeline) {
+          await waitTime(ms.add);
+          assertObserverCalledTimes({
+            start: 1,
+            next: values.total.length,
+            error: withError ? end : 0,
+            complete: withError ? 0 : end
+          });
+        }
+      }
+    }
   });
-
-  assert.deepStrictEqual(times, [2, 1, 4, 4, 0, 0]);
-  await new Promise((resolve) => setTimeout(resolve, 150));
-  assert.deepStrictEqual(times, [2, 2, 4, 6, 0, 2]);
-
-  b.unsubscribe();
-  c.unsubscribe();
-  assert.deepStrictEqual(times, [2, 2, 4, 6, 0, 2]);
-
-  obs
-    .subscribe({
-      start: () => times[2]++,
-      next: () => times[3]++,
-      error: () => times[4]++,
-      complete: () => times[5]++
-    })
-    .unsubscribe();
-
-  assert.deepStrictEqual(times, [2, 2, 5, 6, 0, 3]);
 });
-test(`succeeds w/ keep-open policy`, async () => {
-  const times = [0, 0, 0, 0, 0, 0];
-  const obs = into(
-    new Observable((obs) => {
-      times[0]++;
-      obs.next(1);
-      obs.next(2);
-      setTimeout(() => {
-        obs.next(3);
-        obs.complete();
-      }, 100);
-      return () => times[1]++;
-    }),
-    share('keep-open')
-  );
 
-  assert.deepStrictEqual(times, [0, 0, 0, 0, 0, 0]);
+describe(`further subscriptions, wo/ unsubscribe`, () => {
+  test(`subscriber is not called on resubscription`, () => {
+    for (const policy of policies) {
+      const { observable, assertObservableCalledTimes } = setupObservable(
+        { error: false },
+        share({ policy })
+      );
 
-  obs
-    .subscribe({
-      start: () => times[2]++,
-      next: () => times[3]++,
-      error: () => times[4]++,
-      complete: () => times[5]++
-    })
-    .unsubscribe();
-
-  assert.deepStrictEqual(times, [1, 0, 1, 2, 0, 0]);
-
-  const a = obs.subscribe({
-    start: () => times[2]++,
-    next: () => times[3]++,
-    error: () => times[4]++,
-    complete: () => times[5]++
+      observable.subscribe({ error: () => undefined });
+      observable.subscribe({ error: () => undefined });
+      assertObservableCalledTimes({ subscriber: 1, teardown: 0 });
+    }
   });
+  test(`subscriber is not called after error/complete`, async () => {
+    for (const policy of policies) {
+      for (const withError of [false, true]) {
+        const { observable, termination, assertObservableCalledTimes } =
+          setupObservable({ error: withError }, share({ policy }));
 
-  assert.deepStrictEqual(times, [1, 0, 2, 2, 0, 0]);
+        observable.subscribe({ error: () => undefined });
+        await waitTime(termination);
 
-  const b = obs.subscribe({
-    start: () => times[2]++,
-    next: () => times[3]++,
-    error: () => times[4]++,
-    complete: () => times[5]++
+        observable.subscribe({ error: () => undefined });
+        assertObservableCalledTimes({ subscriber: 1, teardown: 1 });
+      }
+    }
   });
+  test(`teardown is called once on error/complete`, async () => {
+    for (const policy of policies) {
+      for (const withError of [false, true]) {
+        const { observable, termination, assertObservableCalledTimes } =
+          setupObservable({ error: withError }, share({ policy }));
 
-  assert.deepStrictEqual(times, [1, 0, 3, 2, 0, 0]);
-  a.unsubscribe();
-  assert.deepStrictEqual(times, [1, 0, 3, 2, 0, 0]);
+        observable.subscribe({ error: () => undefined });
+        observable.subscribe({ error: () => undefined });
 
-  const c = obs.subscribe({
-    start: () => times[2]++,
-    next: () => times[3]++,
-    error: () => times[4]++,
-    complete: () => times[5]++
+        await waitTime(termination);
+        assertObservableCalledTimes({ subscriber: 1, teardown: 1 });
+      }
+    }
   });
+  test(`subscriptions after error/complete immediately error/complete`, async () => {
+    for (const policy of policies) {
+      for (const withError of [false, true]) {
+        const { observable, termination } = setupObservable(
+          { error: withError },
+          share({ policy })
+        );
 
-  assert.deepStrictEqual(times, [1, 0, 4, 2, 0, 0]);
-  await new Promise((resolve) => setTimeout(resolve, 150));
-  assert.deepStrictEqual(times, [1, 1, 4, 4, 0, 2]);
+        observable.subscribe({ error: () => undefined });
+        await waitTime(termination);
 
-  b.unsubscribe();
-  c.unsubscribe();
-  assert.deepStrictEqual(times, [1, 1, 4, 4, 0, 2]);
+        const { observer, assertObserverCalledTimes } = setupObserver();
+        observable.subscribe(observer);
+        assertObserverCalledTimes({
+          start: 1,
+          next: 0,
+          error: withError ? 1 : 0,
+          complete: withError ? 0 : 1
+        });
+      }
+    }
+  });
+  test(`observer calls propagate, wo/ replay`, async () => {
+    for (const policy of policies) {
+      for (const withError of [false, true]) {
+        const { observable, timeline } = setupObservable(
+          { error: withError },
+          share({ policy })
+        );
+        observable.subscribe({ error: () => undefined });
 
-  obs
-    .subscribe({
-      start: () => times[2]++,
-      next: () => times[3]++,
-      error: () => times[4]++,
-      complete: () => times[5]++
-    })
-    .unsubscribe();
+        timeline.shift();
+        const one = timeline.shift();
+        await waitTime(one?.ms.total || null);
 
-  assert.deepStrictEqual(times, [1, 1, 5, 4, 0, 3]);
+        const o2 = setupObserver();
+        observable.subscribe(o2.observer);
+
+        for (const { ms, values, end } of timeline) {
+          await waitTime(ms.add);
+          o2.assertObserverCalledTimes({
+            start: 1,
+            next: values.total.length - (one?.values.total.length || 0),
+            error: withError ? end : 0,
+            complete: withError ? 0 : end
+          });
+        }
+      }
+    }
+  });
+  test(`observer calls propagate, w/ replay`, async () => {
+    for (const policy of policies) {
+      for (const withError of [false, true]) {
+        const { observable, timeline } = setupObservable(
+          { error: withError },
+          share({ policy, replay: 2 })
+        );
+        observable.subscribe({ error: () => undefined });
+
+        timeline.shift();
+        const one = timeline.shift();
+        await waitTime(one?.ms.total || null);
+
+        const o2 = setupObserver();
+        observable.subscribe(o2.observer);
+
+        o2.assertObserverCalledTimes({
+          start: 1,
+          next: 2,
+          error: 0,
+          complete: 0
+        });
+
+        for (const { ms, values, end } of timeline) {
+          await waitTime(ms.add);
+          o2.assertObserverCalledTimes({
+            start: 1,
+            next: 2 + values.total.length - (one?.values.total.length || 0),
+            error: withError ? end : 0,
+            complete: withError ? 0 : end
+          });
+        }
+      }
+    }
+  });
 });
-test(`succeeds w/ keep-closed policy wo/ finalization`, async () => {
-  const times = [0, 0, 0, 0, 0, 0];
-  const obs = into(
-    new Observable((obs) => {
-      times[0]++;
-      obs.next(1);
-      obs.next(2);
-      setTimeout(() => {
-        obs.next(3);
-        obs.complete();
-      }, 100);
-      return () => times[1]++;
-    }),
-    share('keep-closed')
-  );
 
-  assert.deepStrictEqual(times, [0, 0, 0, 0, 0, 0]);
+describe(`further subscriptions, w/ unsubscribe`, () => {
+  test(`keep-open: subscriber is not called on resubscription`, () => {
+    const { observable, assertObservableCalledTimes } = setupObservable(
+      { error: false },
+      share({ policy: 'keep-open' })
+    );
 
-  const a = obs.subscribe({
-    start: () => times[2]++,
-    next: () => times[3]++,
-    error: () => times[4]++,
-    complete: () => times[5]++
+    observable.subscribe({ error: () => undefined }).unsubscribe();
+    observable.subscribe({ error: () => undefined });
+
+    assertObservableCalledTimes({ subscriber: 1, teardown: 0 });
   });
+  test(`keep-open: subscriber is not called after error/complete`, async () => {
+    for (const withError of [false, true]) {
+      const { observable, termination, assertObservableCalledTimes } =
+        setupObservable({ error: withError }, share({ policy: 'keep-open' }));
 
-  assert.deepStrictEqual(times, [1, 0, 1, 2, 0, 0]);
+      observable.subscribe({ error: () => undefined }).unsubscribe();
+      await waitTime(termination);
+      observable.subscribe({ error: () => undefined });
 
-  const b = obs.subscribe({
-    start: () => times[2]++,
-    next: () => times[3]++,
-    error: () => times[4]++,
-    complete: () => times[5]++
+      assertObservableCalledTimes({ subscriber: 1, teardown: 1 });
+    }
   });
+  test(`keep-open: teardown is called once on error/complete`, async () => {
+    for (const withError of [false, true]) {
+      const { observable, termination, assertObservableCalledTimes } =
+        setupObservable({ error: withError }, share({ policy: 'keep-open' }));
 
-  assert.deepStrictEqual(times, [1, 0, 2, 2, 0, 0]);
-  a.unsubscribe();
-  assert.deepStrictEqual(times, [1, 0, 2, 2, 0, 0]);
+      observable.subscribe({ error: () => undefined }).unsubscribe();
+      await waitTime(termination);
+      observable.subscribe({ error: () => undefined });
+      await waitTime(termination);
 
-  const c = obs.subscribe({
-    start: () => times[2]++,
-    next: () => times[3]++,
-    error: () => times[4]++,
-    complete: () => times[5]++
+      assertObservableCalledTimes({ subscriber: 1, teardown: 1 });
+    }
   });
+  test(`keep-open: subscriptions after error/complete immediately error/complete`, async () => {
+    for (const withError of [false, true]) {
+      const { observable, termination } = setupObservable(
+        { error: withError },
+        share({ policy: 'keep-open' })
+      );
 
-  assert.deepStrictEqual(times, [1, 0, 3, 2, 0, 0]);
-  b.unsubscribe();
-  c.unsubscribe();
-  assert.deepStrictEqual(times, [1, 1, 3, 2, 0, 0]);
+      observable.subscribe({ error: () => undefined }).unsubscribe();
+      await waitTime(termination);
 
-  const d = obs.subscribe({
-    start: () => times[2]++,
-    next: () => times[3]++,
-    error: () => times[4]++,
-    complete: () => times[5]++
+      const { observer, assertObserverCalledTimes } = setupObserver();
+      observable.subscribe(observer);
+      assertObserverCalledTimes({
+        start: 1,
+        next: 0,
+        error: withError ? 1 : 0,
+        complete: withError ? 0 : 1
+      });
+    }
   });
+  test(`keep-open: observer calls propagate, wo/ replay`, async () => {
+    for (const withError of [false, true]) {
+      const { observable, timeline } = setupObservable(
+        { error: withError },
+        share({ policy: 'keep-open' })
+      );
 
-  assert.deepStrictEqual(times, [1, 1, 4, 2, 1, 0]);
-  d.unsubscribe();
-  assert.deepStrictEqual(times, [1, 1, 4, 2, 1, 0]);
-});
-test(`succeeds w/ keep-closed policy w/ finalization`, async () => {
-  const times = [0, 0, 0, 0, 0, 0];
-  const obs = into(
-    new Observable((obs) => {
-      times[0]++;
-      obs.next(1);
-      obs.next(2);
-      setTimeout(() => {
-        obs.next(3);
-        obs.complete();
-      }, 100);
-      return () => times[1]++;
-    }),
-    share({ policy: 'keep-closed' })
-  );
+      observable.subscribe({ error: () => undefined }).unsubscribe();
 
-  assert.deepStrictEqual(times, [0, 0, 0, 0, 0, 0]);
+      timeline.shift();
+      const one = timeline.shift();
+      await waitTime(one?.ms.total || null);
 
-  const a = obs.subscribe({
-    start: () => times[2]++,
-    next: () => times[3]++,
-    error: () => times[4]++,
-    complete: () => times[5]++
+      const o2 = setupObserver();
+      observable.subscribe(o2.observer);
+
+      for (const { ms, values, end } of timeline) {
+        await waitTime(ms.add);
+        o2.assertObserverCalledTimes({
+          start: 1,
+          next: values.total.length - (one?.values.total.length || 0),
+          error: withError ? end : 0,
+          complete: withError ? 0 : end
+        });
+      }
+    }
   });
+  test(`keep-open: observer calls propagate, w/ replay`, async () => {
+    for (const withError of [false, true]) {
+      const { observable, timeline } = setupObservable(
+        { error: withError },
+        share({ policy: 'keep-open', replay: 2 })
+      );
+      observable.subscribe({ error: () => undefined }).unsubscribe();
 
-  assert.deepStrictEqual(times, [1, 0, 1, 2, 0, 0]);
+      timeline.shift();
+      const one = timeline.shift();
+      await waitTime(one?.ms.total || null);
 
-  const b = obs.subscribe({
-    start: () => times[2]++,
-    next: () => times[3]++,
-    error: () => times[4]++,
-    complete: () => times[5]++
+      const o2 = setupObserver();
+      observable.subscribe(o2.observer);
+
+      o2.assertObserverCalledTimes({
+        start: 1,
+        next: 2,
+        error: 0,
+        complete: 0
+      });
+
+      for (const { ms, values, end } of timeline) {
+        await waitTime(ms.add);
+        o2.assertObserverCalledTimes({
+          start: 1,
+          next: 2 + values.total.length - (one?.values.total.length || 0),
+          error: withError ? end : 0,
+          complete: withError ? 0 : end
+        });
+      }
+    }
   });
+  test(`keep-closed: teardown is immediately called`, async () => {
+    const { observable, assertObservableCalledTimes } = setupObservable(
+      { error: false },
+      share({ policy: 'keep-closed' })
+    );
 
-  assert.deepStrictEqual(times, [1, 0, 2, 2, 0, 0]);
-  a.unsubscribe();
-  assert.deepStrictEqual(times, [1, 0, 2, 2, 0, 0]);
-
-  const c = obs.subscribe({
-    start: () => times[2]++,
-    next: () => times[3]++,
-    error: () => times[4]++,
-    complete: () => times[5]++
+    observable.subscribe({ error: () => undefined }).unsubscribe();
+    assertObservableCalledTimes({ subscriber: 1, teardown: 1 });
   });
+  test(`keep-closed: subscriber is not called on resubscription`, () => {
+    const { observable, assertObservableCalledTimes } = setupObservable(
+      { error: false },
+      share({ policy: 'keep-closed' })
+    );
 
-  assert.deepStrictEqual(times, [1, 0, 3, 2, 0, 0]);
-  await new Promise((resolve) => setTimeout(resolve, 150));
-  assert.deepStrictEqual(times, [1, 1, 3, 4, 0, 2]);
+    observable.subscribe({ error: () => undefined }).unsubscribe();
+    observable.subscribe({ error: () => undefined });
 
-  b.unsubscribe();
-  c.unsubscribe();
-  assert.deepStrictEqual(times, [1, 1, 3, 4, 0, 2]);
-
-  const d = obs.subscribe({
-    start: () => times[2]++,
-    next: () => times[3]++,
-    error: () => times[4]++,
-    complete: () => times[5]++
+    assertObservableCalledTimes({ subscriber: 1, teardown: 1 });
   });
+  test(`keep-closed: subscriptions after error/complete immediately error/complete`, async () => {
+    for (const withError of [false, true]) {
+      const { observable, termination } = setupObservable(
+        { error: withError },
+        share({ policy: 'keep-closed' })
+      );
 
-  assert.deepStrictEqual(times, [1, 1, 4, 4, 0, 3]);
-  d.unsubscribe();
-  assert.deepStrictEqual(times, [1, 1, 4, 4, 0, 3]);
+      const subscription = observable.subscribe({ error: () => undefined });
+      await waitTime(termination);
+      subscription.unsubscribe();
+
+      const { observer, assertObserverCalledTimes } = setupObserver();
+      observable.subscribe(observer);
+      assertObserverCalledTimes({
+        start: 1,
+        next: 0,
+        error: withError ? 1 : 0,
+        complete: withError ? 0 : 1
+      });
+    }
+  });
+  test(`keep-closed: immediately errors`, async () => {
+    const { observable } = setupObservable(
+      { error: false },
+      share({ policy: 'keep-closed' })
+    );
+
+    observable.subscribe({ error: () => undefined }).unsubscribe();
+
+    const o2 = setupObserver();
+    observable.subscribe(o2.observer);
+
+    o2.assertObserverCalledTimes({
+      start: 1,
+      next: 0,
+      error: 1,
+      complete: 0
+    });
+  });
+  test(`on-demand: teardown is immediately called`, () => {
+    const { observable, assertObservableCalledTimes } = setupObservable(
+      { error: false },
+      share({ policy: 'on-demand' })
+    );
+
+    observable.subscribe({ error: () => undefined }).unsubscribe();
+
+    assertObservableCalledTimes({ subscriber: 1, teardown: 1 });
+  });
+  test(`on-demand: subscriber is called on resubscription`, () => {
+    const { observable, assertObservableCalledTimes } = setupObservable(
+      { error: false },
+      share({ policy: 'on-demand' })
+    );
+
+    observable.subscribe({ error: () => undefined }).unsubscribe();
+    observable.subscribe({ error: () => undefined });
+
+    assertObservableCalledTimes({ subscriber: 2, teardown: 1 });
+  });
+  test(`on-demand: subscriber is not called after error/complete`, async () => {
+    for (const withError of [false, true]) {
+      const { observable, termination, assertObservableCalledTimes } =
+        setupObservable({ error: withError }, share({ policy: 'on-demand' }));
+
+      const subscription = observable.subscribe({ error: () => undefined });
+      await waitTime(termination);
+      subscription.unsubscribe();
+      observable.subscribe({ error: () => undefined });
+
+      assertObservableCalledTimes({ subscriber: 1, teardown: 1 });
+    }
+  });
+  test(`on-demand: teardown is called once on error/complete`, async () => {
+    for (const withError of [false, true]) {
+      const { observable, termination, assertObservableCalledTimes } =
+        setupObservable({ error: withError }, share({ policy: 'on-demand' }));
+
+      const subscription = observable.subscribe({ error: () => undefined });
+      await waitTime(termination);
+      subscription.unsubscribe();
+      observable.subscribe({ error: () => undefined });
+      await waitTime(termination);
+
+      assertObservableCalledTimes({ subscriber: 1, teardown: 1 });
+    }
+  });
+  test(`on-demand: subscriptions after error/complete immediately error/complete`, async () => {
+    for (const withError of [false, true]) {
+      const { observable, termination } = setupObservable(
+        { error: withError },
+        share({ policy: 'on-demand' })
+      );
+
+      const subscription = observable.subscribe({ error: () => undefined });
+      await waitTime(termination);
+      subscription.unsubscribe();
+
+      const { observer, assertObserverCalledTimes } = setupObserver();
+      observable.subscribe(observer);
+      assertObserverCalledTimes({
+        start: 1,
+        next: 0,
+        error: withError ? 1 : 0,
+        complete: withError ? 0 : 1
+      });
+    }
+  });
+  test(`on-demand: observer calls propagate, wo/ replay`, async () => {
+    for (const withError of [false, true]) {
+      const { observable, timeline } = setupObservable(
+        { error: withError },
+        share({ policy: 'on-demand' })
+      );
+
+      observable.subscribe({ error: () => undefined }).unsubscribe();
+
+      const o2 = setupObserver();
+      observable.subscribe(o2.observer);
+
+      for (const { ms, values, end } of timeline) {
+        await waitTime(ms.add);
+        o2.assertObserverCalledTimes({
+          start: 1,
+          next: values.total.length,
+          error: withError ? end : 0,
+          complete: withError ? 0 : end
+        });
+      }
+    }
+  });
+  test(`on-demand: observer calls propagate, w/ replay`, async () => {
+    for (const withError of [false, true]) {
+      const { observable, timeline } = setupObservable(
+        { error: withError },
+        share({ policy: 'on-demand', replay: 2 })
+      );
+
+      observable.subscribe({ error: () => undefined }).unsubscribe();
+
+      const o2 = setupObserver();
+      observable.subscribe(o2.observer);
+
+      for (const { ms, values, end } of timeline) {
+        await waitTime(ms.add);
+        o2.assertObserverCalledTimes({
+          start: 1,
+          next: values.total.length,
+          error: withError ? end : 0,
+          complete: withError ? 0 : end
+        });
+      }
+    }
+  });
 });
