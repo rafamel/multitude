@@ -23,18 +23,24 @@ export class Invoke {
     }
   }
   public static observer(
-    action: 'start' | 'error' | 'complete',
+    action: 'start' | 'next' | 'error' | 'complete',
     payload: any,
     subscription: Subscription,
     hooks: Hooks
   ): void {
     if (SubscriptionManager.isClosed(subscription)) {
-      if (action === 'error') hooks.onUnhandledError(payload, subscription);
+      if (action === 'next') {
+        hooks.onStoppedNotification(payload, subscription);
+      } else if (action === 'error') {
+        hooks.onUnhandledError(payload, subscription);
+      }
       return;
     }
 
     const observer = SubscriptionManager.getObserver(subscription);
-    if (action !== 'start') SubscriptionManager.close(subscription);
+    if (action === 'error' || action === 'complete') {
+      SubscriptionManager.close(subscription);
+    }
 
     try {
       this.method(
@@ -48,7 +54,7 @@ export class Invoke {
     } catch (err) {
       hooks.onUnhandledError(err as Error, subscription);
     } finally {
-      if (action !== 'start') {
+      if (action === 'error' || action === 'complete') {
         try {
           subscription.unsubscribe();
         } catch (err) {
