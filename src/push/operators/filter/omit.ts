@@ -1,6 +1,6 @@
+import { compare } from 'equal-strategies';
 import { Push } from '@definitions';
 import { filter } from './filter';
-import { compare } from 'equal-strategies';
 
 export type OmitStrategy = 'strict' | 'shallow' | 'deep';
 

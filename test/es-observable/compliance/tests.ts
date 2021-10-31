@@ -2,7 +2,7 @@
 /* eslint-disable prefer-const */
 import assert from 'assert';
 import { Push } from '@definitions';
-import { Handler } from '@helpers';
+import { Util } from '@helpers';
 import { isObservable } from '@push';
 import { runTests } from '../module/tests';
 import { Test, test } from './engine';
@@ -29,27 +29,27 @@ export function tests(Observable: Push.ObservableConstructor): Test[] {
       let pass = true;
 
       const Constructor: any = Observable;
-      Handler.tries(() => {
+      Util.tries(() => {
         new Constructor(undefined);
         pass = false;
       });
-      Handler.tries(() => {
+      Util.tries(() => {
         new Constructor(null);
         pass = false;
       });
-      Handler.tries(() => {
+      Util.tries(() => {
         new Constructor(0);
         pass = false;
       });
-      Handler.tries(() => {
+      Util.tries(() => {
         new Constructor(true);
         pass = false;
       });
-      Handler.tries(() => {
+      Util.tries(() => {
         new Constructor('');
         pass = false;
       });
-      Handler.tries(() => {
+      Util.tries(() => {
         new Constructor({});
         pass = false;
       });
@@ -74,27 +74,27 @@ export function tests(Observable: Push.ObservableConstructor): Test[] {
       let pass = true;
 
       const Constructor: any = Observable;
-      Handler.tries(() => {
+      Util.tries(() => {
         Constructor.from(undefined);
         pass = false;
       });
-      Handler.tries(() => {
+      Util.tries(() => {
         Constructor.from(null);
         pass = false;
       });
-      Handler.tries(() => {
+      Util.tries(() => {
         Constructor.from(1);
         pass = false;
       });
-      Handler.tries(() => {
+      Util.tries(() => {
         Constructor.from(true);
         pass = false;
       });
-      Handler.tries(() => {
+      Util.tries(() => {
         Constructor.from({});
         pass = false;
       });
-      Handler.tries(() => {
+      Util.tries(() => {
         Constructor.from(() => undefined);
         pass = false;
       });

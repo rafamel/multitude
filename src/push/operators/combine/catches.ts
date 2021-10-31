@@ -1,9 +1,9 @@
+import { TypeGuard } from 'type-core';
 import { Push } from '@definitions';
 import { Observable } from '../../classes/Observable';
 import { transform } from '../../utils/transform';
 import { intercept } from '../../utils/intercept';
-import { from } from '../../creators/from';
-import { TypeGuard } from 'type-core';
+import { from } from '../create/from';
 
 export interface CatchesOptions<T, U> {
   /**
@@ -73,26 +73,29 @@ function trunk<T, U = T>(
         subs = null;
       };
 
-      intercept(observable, obs, {
-        start(subscription) {
-          subs = subscription;
-        },
-        error(reason: Error) {
-          if (limit < 1) {
-            obs.error(reason);
-          } else {
-            unsubscribe();
+      intercept(observable, {
+        to: obs,
+        between: {
+          start(subscription) {
+            subs = subscription;
+          },
+          error(reason: Error) {
+            if (limit < 1) {
+              obs.error(reason);
+            } else {
+              unsubscribe();
 
-            Promise.resolve().then(() => {
-              from(selector(limit - 1, reason, observable)).subscribe({
-                start(subscription) {
-                  subs = subscription;
-                },
-                next: obs.next.bind(obs),
-                error: obs.error.bind(obs),
-                complete: obs.complete.bind(obs)
+              Promise.resolve().then(() => {
+                from(selector(limit - 1, reason, observable)).subscribe({
+                  start(subscription) {
+                    subs = subscription;
+                  },
+                  next: obs.next.bind(obs),
+                  error: obs.error.bind(obs),
+                  complete: obs.complete.bind(obs)
+                });
               });
-            });
+            }
           }
         }
       });

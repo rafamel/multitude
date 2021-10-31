@@ -1,40 +1,37 @@
+import { NullaryFn } from 'type-core';
 import { Push } from '@definitions';
-import { Handler } from '@helpers';
+import { Globals, Util } from '@helpers';
 import { teardown } from '../../utils/teardown';
-import { Invoke, SubscriptionManager } from '../helpers';
+import { Accessors } from './helpers/Accessors';
+import { Invoke } from './helpers/Invoke';
 import { SubscriptionObserver } from './SubscriptionObserver';
-import { Hooks } from './Hooks';
-import { NullaryFn, Empty } from 'type-core';
 
 class Subscription<T = any> implements Push.Subscription {
   #teardown: NullaryFn | null;
-  #hooks: Hooks<T>;
   public constructor(
     observer: Push.Observer<T>,
-    subscriber: Push.Subscriber<T>,
-    ...hooks: [] | [Push.Hooks<T> | Empty]
+    subscriber: Push.Subscriber<T>
   ) {
     this.#teardown = null;
-    this.#hooks = Hooks.from(hooks[0]);
-    SubscriptionManager.setObserver(this, observer);
+    Accessors.setObserver(this, observer);
 
-    Invoke.observer('start', this, this, this.#hooks);
-    if (SubscriptionManager.isClosed(this)) return;
+    Invoke.observer('start', this, this);
+    if (!Accessors.getObserver(this)) return;
 
-    const subscriptionObserver = new SubscriptionObserver(this, hooks[0]);
+    const subscriptionObserver = new SubscriptionObserver(this);
 
-    let fn: NullaryFn = Handler.noop;
+    let fn: NullaryFn = Util.noop;
     try {
       const unsubscribe = subscriber(subscriptionObserver);
       fn = teardown(unsubscribe);
     } catch (err) {
       subscriptionObserver.error(err as Error);
     } finally {
-      if (SubscriptionManager.isClosed(this)) {
+      if (!Accessors.getObserver(this)) {
         try {
           fn();
         } catch (err) {
-          this.#hooks.onUnhandledError(err as Error, this);
+          Globals.onUnhandledError(err as Error, this);
         }
       } else {
         this.#teardown = fn;
@@ -42,11 +39,11 @@ class Subscription<T = any> implements Push.Subscription {
     }
   }
   public get closed(): boolean {
-    return SubscriptionManager.isClosed(this);
+    return !Accessors.getObserver(this);
   }
   public unsubscribe(): void {
-    if (!SubscriptionManager.isClosed(this)) {
-      SubscriptionManager.close(this);
+    if (Accessors.getObserver(this)) {
+      Accessors.setObserver(this, null);
     }
 
     const teardown = this.#teardown;
@@ -56,7 +53,7 @@ class Subscription<T = any> implements Push.Subscription {
     try {
       teardown();
     } catch (err) {
-      this.#hooks.onUnhandledError(err as Error, this);
+      Globals.onUnhandledError(err as Error, this);
     }
   }
 }

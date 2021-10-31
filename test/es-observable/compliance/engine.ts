@@ -1,6 +1,6 @@
 /* eslint-disable no-console */
-import chalk from 'chalk';
 import util from 'util';
+import chalk from 'chalk';
 
 export type Test = null | [string, () => void | Promise<void>];
 export type Result = [string, Error[]];

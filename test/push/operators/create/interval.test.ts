@@ -1,7 +1,7 @@
 import { test } from '@jest/globals';
 import assert from 'assert';
 import { interval } from '@push';
-import { Handler } from '@helpers';
+import { Util } from '@helpers';
 
 test(`succeeds wo/ arguments`, async () => {
   const obs = interval();
@@ -52,7 +52,7 @@ test(`succeeds w/ every, cancel (callback success)`, async () => {
   assert.deepStrictEqual(values, [0, 1, 2, 3, 4]);
 });
 test(`succeeds w/ every, cancel (callback failure)`, async () => {
-  const obs = interval({ every: 300, cancel: () => Handler.throws(Error()) });
+  const obs = interval({ every: 300, cancel: () => Util.throws(Error()) });
 
   let errorCalled = false;
   const values: any[] = [];

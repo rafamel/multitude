@@ -1,6 +1,6 @@
+import { BinaryFn } from 'type-core';
 import { Push } from '@definitions';
 import { operate } from '../../utils/operate';
-import { BinaryFn } from 'type-core';
 
 export function distinct<T>(
   selector?: BinaryFn<[T, number], any>
@@ -9,20 +9,17 @@ export function distinct<T>(
     let index = 0;
     const values = new Set();
 
-    return [
-      null,
-      function next(value: T): void {
+    return {
+      next(value: T): void {
         const selectedValue = selector ? selector(value, index++) : value;
         if (!values.has(selectedValue)) {
           values.add(selectedValue);
           obs.next(value);
         }
       },
-      null,
-      null,
-      function teardown() {
+      teardown() {
         values.clear();
       }
-    ];
+    };
   });
 }

@@ -1,6 +1,6 @@
-import { Push } from '@definitions';
-import { from } from '../creators/from';
 import { NullaryFn, TypeGuard, UnaryFn } from 'type-core';
+import { Push } from '@definitions';
+import { from } from '../operators/create/from';
 
 export interface ReactHooksDependency {
   useState<S>(initial: S): [S, UnaryFn<S>];

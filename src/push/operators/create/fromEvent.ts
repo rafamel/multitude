@@ -1,6 +1,6 @@
-import { Push } from '@definitions';
-import { Observable } from '../classes/Observable';
 import { TypeGuard } from 'type-core';
+import { Push } from '@definitions';
+import { Observable } from '../../classes/Observable';
 
 export function fromEvent<T>(
   source: NodeJS.EventEmitter,

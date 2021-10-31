@@ -1,6 +1,6 @@
+import { NullaryFn, TypeGuard } from 'type-core';
 import { Push } from '@definitions';
 import { operate } from '../../utils/operate';
-import { NullaryFn, TypeGuard } from 'type-core';
 
 export interface DelayOptions<T> {
   /** Delay in millisecons */
@@ -45,26 +45,25 @@ export function delay<T>(due?: number | DelayOptions<T>): Push.Operation<T> {
 
     let index = 0;
     let final = false;
-    return [
-      null,
-      condition
+    return {
+      next: condition
         ? (value) => queue(condition(value, index++), obs.next.bind(obs, value))
         : (value) => queue(true, obs.next.bind(obs, value)),
-      function error(error) {
+      error(error) {
         final = true;
         queue(signals, obs.error.bind(obs, error));
       },
-      function complete() {
+      complete() {
         final = true;
         queue(signals, obs.complete.bind(obs));
       },
-      function teardown() {
+      teardown() {
         if (final) return;
 
         for (const timeout of timeouts) {
           clearTimeout(timeout);
         }
       }
-    ];
+    };
   });
 }

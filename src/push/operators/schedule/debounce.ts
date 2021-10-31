@@ -1,15 +1,14 @@
+import { NullaryFn } from 'type-core';
 import { Push } from '@definitions';
 import { operate } from '../../utils/operate';
-import { NullaryFn } from 'type-core';
 
 export function debounce<T>(due: number): Push.Operation<T> {
   return operate<T>((obs) => {
     let timeout: void | NodeJS.Timeout;
     let push: void | NullaryFn;
 
-    return [
-      null,
-      function next(value) {
+    return {
+      next(value) {
         if (timeout) clearTimeout(timeout);
 
         push = () => {
@@ -19,15 +18,14 @@ export function debounce<T>(due: number): Push.Operation<T> {
 
         timeout = setTimeout(() => (push ? push() : null), due);
       },
-      null,
-      function complete() {
+      complete() {
         if (timeout) clearTimeout(timeout);
         if (push) push();
         obs.complete();
       },
-      function teardown() {
+      teardown() {
         if (timeout) clearTimeout(timeout);
       }
-    ];
+    };
   });
 }

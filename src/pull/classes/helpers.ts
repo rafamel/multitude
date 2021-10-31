@@ -1,6 +1,6 @@
-import { Pull } from '@definitions';
-import { Resolver } from '@helpers';
 import { NullaryFn, TypeGuard } from 'type-core';
+import { Pull } from '@definitions';
+import { Util } from '@helpers';
 
 export class Validate {
   public static provider(provider: Pull.Provider<any, any>): void {
@@ -116,7 +116,7 @@ export class Consume {
     opposite: Pull.PullableIterator<U, T>,
     value: U
   ): void {
-    Resolver.resolve(
+    Util.resolves(
       () => current.next(value),
       (result) => {
         if (!result.complete) {
@@ -125,7 +125,7 @@ export class Consume {
         return opposite.complete();
       },
       (err) => {
-        return Resolver.resolve(
+        return Util.resolves(
           () => opposite.error(err),
           (result) => {
             if (!result.complete) {

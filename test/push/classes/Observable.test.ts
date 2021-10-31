@@ -7,9 +7,9 @@ import {
   Subscription,
   configure
 } from '@push';
-import { Handler } from '@helpers';
+import { Util } from '@helpers';
 
-configure();
+configure(null);
 
 test(`Observable is ObservableLike`, () => {
   const instance = new Observable(() => undefined);
@@ -57,7 +57,7 @@ test(`Subscription.unsubscribe: errors when subscriber fails`, () => {
   const errors: Error[] = [];
   configure({ onUnhandledError: (err) => errors.push(err) });
 
-  new Observable(() => () => Handler.throws(Error())).subscribe().unsubscribe();
+  new Observable(() => () => Util.throws(Error())).subscribe().unsubscribe();
 
   assert(errors.length);
 });

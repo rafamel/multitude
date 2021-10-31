@@ -1,12 +1,15 @@
+import { into } from 'pipettes';
 import { Push } from '@definitions';
-import { from } from '../creators/from';
+import { from } from '../operators/create/from';
 import { tap } from '../operators/tap';
 import { Observable } from './Observable';
-import { into } from 'pipettes';
 
 export declare namespace Subject {
   export interface Options<U> {
-    /** Sets initial value; it won't be emitted. */
+    /**
+     * Sets an initial `Subject.value`.
+     * This value will not be emitted.
+     */
     value?: U;
   }
 }
@@ -15,11 +18,25 @@ export class Subject<T = any, U extends T | void = T | void>
   extends Observable<T>
   implements Push.Subject<T, U>
 {
+  /**
+   * As subjects initialize before subscriptions,
+   * `item` won't be emitted and will be used instead
+   * as an initial `Subject.value`.
+   * Effectively an alternative to `new Subject({ value })`.
+   */
   public static of<T>(item: T): Subject<T, T> {
-    const subject = new this<T, T>(item);
-    subject.next(item);
-    return subject;
+    return new this<T, T>({ value: item });
   }
+  /**
+   * As subjects initialize before subscriptions,
+   * values emitted synchronously by the source `item`
+   * won't be emitted.
+   * The last synchronous value will, if existing,
+   * be set as the initial `Subject.value`, overriding
+   * the `options.value` passed, if any.
+   * The finalization of the source `item` will
+   * cause the Subject to also close.
+   */
   public static from<T, U extends T | void = T | void>(
     item: Push.Convertible<T>,
     options?: Subject.Options<U>
@@ -43,14 +60,13 @@ export class Subject<T = any, U extends T | void = T | void>
   }
   #value: T | U;
   #closed: boolean;
-  #observers: Array<Push.SubscriptionObserver<T>>;
+  #observers: Set<Push.SubscriptionObserver<T>>;
   public constructor(options?: Subject.Options<U>) {
-    const observers: Array<Push.SubscriptionObserver<T>> = [];
+    const observers = new Set<Push.SubscriptionObserver<T>>();
     super((obs) => {
-      observers.push(obs);
+      observers.add(obs);
       return () => {
-        const index = observers.indexOf(obs);
-        if (index >= 0) observers.splice(index, 1);
+        observers.delete(obs);
       };
     });
     this.#value = (options ? options.value : undefined) as U;
@@ -60,24 +76,40 @@ export class Subject<T = any, U extends T | void = T | void>
   public [Symbol.observable](): Observable<T> {
     return Observable.from(this);
   }
+  /**
+   * Last value emitted by a Subject or, in its abscense,
+   * the initial value set.
+   */
   public get value(): T | U {
     return this.#value;
   }
+  /**
+   * Indicates the state of the subject.
+   */
   public get closed(): boolean {
     return this.#closed;
   }
+  /**
+   * Emits a value.
+   */
   public next(value: T): void {
     this.#value = value;
     for (const observer of this.#observers) {
       observer.next(value);
     }
   }
+  /**
+   * Emits an error.
+   */
   public error(error: Error): void {
     this.#closed = true;
     for (const observer of this.#observers) {
       observer.error(error);
     }
   }
+  /**
+   * Emits a complete signal.
+   */
   public complete(): void {
     this.#closed = true;
     for (const observer of this.#observers) {

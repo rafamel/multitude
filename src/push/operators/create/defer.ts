@@ -1,6 +1,6 @@
-import { Push } from '@definitions';
-import { Observable } from '../classes/Observable';
 import { NullaryFn } from 'type-core';
+import { Push } from '@definitions';
+import { Observable } from '../../classes/Observable';
 
 export function defer<T>(
   deferral: NullaryFn<T | PromiseLike<T>>

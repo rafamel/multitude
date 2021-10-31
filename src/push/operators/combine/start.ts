@@ -1,7 +1,7 @@
 import { Push } from '@definitions';
 import { Observable } from '../../classes/Observable';
 import { transform } from '../../utils/transform';
-import { merge } from '../../creators/merge';
+import { merge } from '../create/merge';
 
 export type StartStrategy = 'always' | 'no-emit';
 

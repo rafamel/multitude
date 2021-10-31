@@ -1,7 +1,7 @@
+import { shallow } from 'merge-strategies';
 import { Push } from '@definitions';
 import { transform } from '../../utils/transform';
 import { Observable } from '../../classes/Observable';
-import { shallow } from 'merge-strategies';
 
 export interface ShareOptions {
   policy?: SharePolicy;

@@ -1,7 +1,8 @@
 import { Push } from '@definitions';
-import { Empty } from 'type-core';
-import { HooksManager } from '../helpers';
+import { Globals } from '@helpers';
 
-export function configure(hooks?: Push.Hooks | Empty): void {
-  HooksManager.set(hooks);
+export type ConfigureOptions = Push.Hooks;
+
+export function configure(options: ConfigureOptions | null): void {
+  Globals.setGlobals(options);
 }

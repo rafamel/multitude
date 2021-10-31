@@ -17,40 +17,41 @@ export function mergeMap<T, U>(
       }
     }
 
-    return [
-      null,
-      function next(value: T): void {
+    return {
+      next(value: T): void {
         if (obs.closed) return;
 
-        intercept(projection(value, index++), obs, {
-          start(subscription) {
-            subscriptions.push(subscription);
-          },
-          error(error) {
-            obs.error(error);
-            unsubscribe();
-          },
-          complete() {
-            completeSubscriptions++;
-
-            if (!parentComplete) return;
-            if (completeSubscriptions >= subscriptions.length) {
-              obs.complete();
+        intercept(projection(value, index++), {
+          to: obs,
+          between: {
+            start(subscription) {
+              subscriptions.push(subscription);
+            },
+            error(error) {
+              obs.error(error);
               unsubscribe();
+            },
+            complete() {
+              completeSubscriptions++;
+
+              if (!parentComplete) return;
+              if (completeSubscriptions >= subscriptions.length) {
+                obs.complete();
+                unsubscribe();
+              }
             }
           }
         });
       },
-      null,
-      function complete() {
+      complete() {
         parentComplete = true;
         if (completeSubscriptions >= subscriptions.length) {
           obs.complete();
         }
       },
-      function teardown() {
+      teardown() {
         if (obs.closed || !parentComplete) unsubscribe();
       }
-    ];
+    };
   });
 }

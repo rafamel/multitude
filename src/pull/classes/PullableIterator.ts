@@ -1,7 +1,7 @@
-import { Pull } from '@definitions';
-import { Handler, Resolver } from '@helpers';
-import { Validate } from './helpers';
 import { MaybePromise, Dictionary, TypeGuard } from 'type-core';
+import { Pull } from '@definitions';
+import { Util } from '@helpers';
+import { Validate } from './helpers';
 
 export class PullableIterator<O, I> implements Pull.PullableIterator<O, I> {
   #closed: boolean;
@@ -17,8 +17,8 @@ export class PullableIterator<O, I> implements Pull.PullableIterator<O, I> {
 
     const iterator = this.#iterator;
 
-    let method: any = Handler.noop;
-    return Resolver.resolve<any>(
+    let method: any = Util.noop;
+    return Util.resolves<any>(
       () => (method = iterator.next).call(iterator, value),
       (result) => {
         if (TypeGuard.isObject(result)) return result;
@@ -35,8 +35,8 @@ export class PullableIterator<O, I> implements Pull.PullableIterator<O, I> {
 
     const iterator = this.#iterator;
 
-    let method: any = Handler.noop;
-    return Resolver.resolve<any>(
+    let method: any = Util.noop;
+    return Util.resolves<any>(
       () => (method = iterator.error).call(iterator, error),
       (result) => {
         if (TypeGuard.isObject(result)) return result;
@@ -57,8 +57,8 @@ export class PullableIterator<O, I> implements Pull.PullableIterator<O, I> {
     const iterator = this.#iterator;
 
     this.#closed = true;
-    let method: any = Handler.noop;
-    return Resolver.resolve<any>(
+    let method: any = Util.noop;
+    return Util.resolves<any>(
       () => (method = iterator.complete).call(iterator),
       null,
       (err) => {

@@ -1,4 +1,3 @@
-export * from './Hooks';
-export * from './Talkback';
+export * from './Observable';
 export * from './Subscription';
 export * from './SubscriptionObserver';

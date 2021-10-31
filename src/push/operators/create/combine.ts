@@ -1,11 +1,11 @@
-import { Push } from '@definitions';
-import { Observable } from '../classes/Observable';
-import { map } from '../operators/map';
-import { intercept } from '../utils/intercept';
-import { from } from './from';
-import { merge } from './merge';
 import { Dictionary } from 'type-core';
 import { into } from 'pipettes';
+import { Push } from '@definitions';
+import { intercept } from '../../utils/intercept';
+import { Observable } from '../../classes/Observable';
+import { map } from '../map/map';
+import { from } from './from';
+import { merge } from './merge';
 
 export type CombineResponse<T extends Dictionary<Push.Convertible>> = {
   [P in keyof T]: T[P] extends Push.Convertible<infer U> ? U : never;
@@ -120,12 +120,15 @@ function combineList(arr?: Push.Convertible[]): Push.Observable<any[]> {
         .map((_, i) => i)
     );
     const current = Array(observables.length).fill(0);
-    return intercept(merge(...sources), obs, {
-      next([index, value]) {
-        current[index] = value;
+    return intercept(merge(...sources), {
+      to: obs,
+      between: {
+        next([index, value]) {
+          current[index] = value;
 
-        if (pending.has(index)) pending.delete(index);
-        if (!pending.size) obs.next(current);
+          if (pending.has(index)) pending.delete(index);
+          if (!pending.size) obs.next(current);
+        }
       }
     });
   });

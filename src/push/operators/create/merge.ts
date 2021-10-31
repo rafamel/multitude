@@ -1,6 +1,6 @@
 import { Push } from '@definitions';
-import { Observable } from '../classes/Observable';
-import { intercept } from '../utils/intercept';
+import { intercept } from '../../utils/intercept';
+import { Observable } from '../../classes/Observable';
 import { from } from './from';
 
 export function merge<A>(a: Push.Convertible<A>): Push.Observable<A>;
@@ -61,10 +61,13 @@ export function merge(...arr: any): Push.Observable {
       .map((observable) => {
         return obs.closed
           ? null
-          : intercept(observable, obs, {
-              complete() {
-                completed++;
-                if (completed >= observables.length) obs.complete();
+          : intercept(observable, {
+              to: obs,
+              between: {
+                complete() {
+                  completed++;
+                  if (completed >= observables.length) obs.complete();
+                }
               }
             });
       })

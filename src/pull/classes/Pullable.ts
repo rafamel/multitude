@@ -1,5 +1,5 @@
-import { Pull } from '@definitions';
 import { TypeGuard } from 'type-core';
+import { Pull } from '@definitions';
 import { isPullableCompatible, isPullableLike } from '../utils';
 import { Consume, From, Validate } from './helpers';
 import { PullableIterator } from './PullableIterator';

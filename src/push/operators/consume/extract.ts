@@ -1,7 +1,7 @@
+import { into } from 'pipettes';
 import { Push } from '@definitions';
 import { transform } from '../../utils/transform';
 import { take } from '../filter/take';
-import { into } from 'pipettes';
 
 /**
  * Returns the first synchronous value of an Observable, if any,

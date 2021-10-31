@@ -1,6 +1,6 @@
+import { TypeGuard } from 'type-core';
 import { Push } from '@definitions';
 import { operate } from '../../utils/operate';
-import { TypeGuard } from 'type-core';
 
 export interface SkipOptions<T> {
   count?: number;

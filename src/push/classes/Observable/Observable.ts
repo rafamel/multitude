@@ -1,12 +1,14 @@
-import { Push } from '@definitions';
-import { HooksManager } from '../helpers';
-import { isObservableCompatible, isObservableLike } from '../utils/type-guards';
-import { Subscription } from './assistance';
-import { From } from './helpers';
 import { Empty, NullaryFn, UnaryFn, TypeGuard } from 'type-core';
+import { Push } from '@definitions';
+import {
+  isObservableCompatible,
+  isObservableLike
+} from '../../utils/type-guards';
+import { From } from './helpers/From';
+import { Subscription } from './Subscription';
 import 'symbol-observable';
 
-export class Observable<T = any> {
+export class Observable<T = any> implements Push.Observable<T> {
   public static of<T>(...items: T[]): Observable<T> {
     const Constructor = TypeGuard.isFunction(this) ? this : Observable;
     return From.iterable(Constructor, items) as Observable<T>;
@@ -67,6 +69,6 @@ export class Observable<T = any> {
       observer = {};
     }
 
-    return new Subscription(observer, subscriber, HooksManager.get());
+    return new Subscription(observer, subscriber);
   }
 }

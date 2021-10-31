@@ -26,6 +26,7 @@ export declare namespace Push {
     [Symbol.observable]: () => Observable<T>;
   };
 
+  // TODO: add generic error: E = unknown
   export interface Observable<T = any> extends Compatible<T>, Like<T> {
     subscribe(observer?: Observer<T>): Subscription;
     subscribe(

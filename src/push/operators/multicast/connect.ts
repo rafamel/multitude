@@ -1,5 +1,5 @@
-import { Push } from '@definitions';
 import { shallow } from 'merge-strategies';
+import { Push } from '@definitions';
 import { transform } from '../../utils/transform';
 import { share } from './share';
 

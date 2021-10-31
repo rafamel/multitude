@@ -1,7 +1,7 @@
+import { into } from 'pipettes';
 import { Push } from '@definitions';
 import { transform } from '../../utils/transform';
 import { take } from '../filter/take';
-import { into } from 'pipettes';
 
 export function first<T>(strict: true): Push.Transformation<T, Promise<T>>;
 export function first<T>(
