@@ -6,8 +6,22 @@ configure({ onUnhandledError: null });
 
 let pass = true;
 [
-  () => compliance('ES Observable', ESObservable, 'final'),
-  () => compliance('Observable', Observable, 'each')
+  () => {
+    return compliance({
+      spec: true,
+      name: 'ES Observable',
+      logging: 'final',
+      Constructor: ESObservable
+    });
+  },
+  () => {
+    return compliance({
+      spec: true,
+      name: 'Observable',
+      logging: 'each',
+      Constructor: Observable
+    });
+  }
 ]
   .reduce((acc, item) => {
     return acc.then(item).then((result) => {

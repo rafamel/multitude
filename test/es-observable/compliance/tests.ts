@@ -8,12 +8,19 @@ import { runTests } from '../module/tests';
 import { Test, test } from './engine';
 import 'symbol-observable';
 
-export function tests(Observable: Push.ObservableConstructor): Test[] {
+export function tests(
+  Observable: Push.ObservableConstructor,
+  spec: boolean
+): Test[] {
   return [
-    test('ES Observable Test Runner', async () => {
-      const { logger } = await runTests(Observable);
-      assert(logger.failed === 0);
-    }),
+    ...(spec
+      ? [
+          test('ES Observable Test Runner', async () => {
+            const { logger } = await runTests(Observable);
+            assert(logger.failed === 0);
+          })
+        ]
+      : []),
     test('Observable Constructor: does not throw when a function', () => {
       let pass = true;
 

@@ -1,12 +1,15 @@
-import assert from 'assert';
-import { test } from '@jest/globals';
+import { expect, test } from '@jest/globals';
 import { Observable, configure } from '@push';
 import { compliance } from '../../es-observable/compliance';
 
 configure({ onUnhandledError: null });
 
-test(`Observable passes compliance tests`, async () => {
-  const response = await compliance('Observable', Observable, 'silent');
-
-  assert(response.result[1].length === 0);
+test(`Observable passes spec and compliance tests`, async () => {
+  const response = await compliance({
+    spec: true,
+    name: 'Observable',
+    logging: 'silent',
+    Constructor: Observable
+  });
+  expect(response.result[1]).toHaveLength(0);
 });

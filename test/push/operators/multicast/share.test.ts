@@ -1,13 +1,14 @@
 import { test, expect, describe } from '@jest/globals';
+import { Util } from '@helpers';
 import { share, SharePolicy } from '@push';
-import { setupObservable, setupObserver, waitTime } from '../../../setup';
+import { Setup } from '../../../setup';
 
 const policies: SharePolicy[] = ['keep-open', 'keep-closed', 'on-demand'];
 
 describe(`no subscription`, () => {
   test(`subscriber and teardown are not called on initialization`, () => {
     for (const policy of [...policies, null]) {
-      const { assertObservableCalledTimes } = setupObservable(
+      const { assertObservableCalledTimes } = Setup.observable(
         { error: false },
         policy ? share({ policy }) : share()
       );
@@ -20,7 +21,7 @@ describe(`no subscription`, () => {
 describe(`first subscription`, () => {
   test(`subscriber is called`, () => {
     for (const policy of policies) {
-      const { observable, assertObservableCalledTimes } = setupObservable(
+      const { observable, assertObservableCalledTimes } = Setup.observable(
         { error: false },
         share({ policy })
       );
@@ -33,11 +34,11 @@ describe(`first subscription`, () => {
     for (const policy of policies) {
       for (const withError of [false, true]) {
         const { observable, termination, assertObservableCalledTimes } =
-          setupObservable({ error: withError }, share({ policy }));
+          Setup.observable({ error: withError }, share({ policy }));
 
         const subs1 = observable.subscribe({ error: () => undefined });
 
-        await waitTime(termination);
+        await Util.wait(termination);
         expect(subs1.closed).toBe(true);
         assertObservableCalledTimes({ subscriber: 1, teardown: 1 });
       }
@@ -46,15 +47,15 @@ describe(`first subscription`, () => {
   test(`observer calls propagate`, async () => {
     for (const policy of policies) {
       for (const withError of [false, true]) {
-        const { observable, timeline } = setupObservable(
+        const { observable, timeline } = Setup.observable(
           { error: withError },
           share({ policy })
         );
-        const { observer, assertObserverCalledTimes } = setupObserver();
+        const { observer, assertObserverCalledTimes } = Setup.observer();
 
         observable.subscribe(observer);
         for (const { ms, values, end } of timeline) {
-          await waitTime(ms.add);
+          await Util.wait(ms.add);
           assertObserverCalledTimes({
             start: 1,
             next: values.total.length,
@@ -70,7 +71,7 @@ describe(`first subscription`, () => {
 describe(`further subscriptions, wo/ unsubscribe`, () => {
   test(`subscriber is not called on resubscription`, () => {
     for (const policy of policies) {
-      const { observable, assertObservableCalledTimes } = setupObservable(
+      const { observable, assertObservableCalledTimes } = Setup.observable(
         { error: false },
         share({ policy })
       );
@@ -84,10 +85,10 @@ describe(`further subscriptions, wo/ unsubscribe`, () => {
     for (const policy of policies) {
       for (const withError of [false, true]) {
         const { observable, termination, assertObservableCalledTimes } =
-          setupObservable({ error: withError }, share({ policy }));
+          Setup.observable({ error: withError }, share({ policy }));
 
         observable.subscribe({ error: () => undefined });
-        await waitTime(termination);
+        await Util.wait(termination);
 
         observable.subscribe({ error: () => undefined });
         assertObservableCalledTimes({ subscriber: 1, teardown: 1 });
@@ -98,12 +99,12 @@ describe(`further subscriptions, wo/ unsubscribe`, () => {
     for (const policy of policies) {
       for (const withError of [false, true]) {
         const { observable, termination, assertObservableCalledTimes } =
-          setupObservable({ error: withError }, share({ policy }));
+          Setup.observable({ error: withError }, share({ policy }));
 
         observable.subscribe({ error: () => undefined });
         observable.subscribe({ error: () => undefined });
 
-        await waitTime(termination);
+        await Util.wait(termination);
         assertObservableCalledTimes({ subscriber: 1, teardown: 1 });
       }
     }
@@ -111,15 +112,15 @@ describe(`further subscriptions, wo/ unsubscribe`, () => {
   test(`subscriptions after error/complete immediately error/complete`, async () => {
     for (const policy of policies) {
       for (const withError of [false, true]) {
-        const { observable, termination } = setupObservable(
+        const { observable, termination } = Setup.observable(
           { error: withError },
           share({ policy })
         );
 
         observable.subscribe({ error: () => undefined });
-        await waitTime(termination);
+        await Util.wait(termination);
 
-        const { observer, assertObserverCalledTimes } = setupObserver();
+        const { observer, assertObserverCalledTimes } = Setup.observer();
         observable.subscribe(observer);
         assertObserverCalledTimes({
           start: 1,
@@ -133,7 +134,7 @@ describe(`further subscriptions, wo/ unsubscribe`, () => {
   test(`observer calls propagate, wo/ replay`, async () => {
     for (const policy of policies) {
       for (const withError of [false, true]) {
-        const { observable, timeline } = setupObservable(
+        const { observable, timeline } = Setup.observable(
           { error: withError },
           share({ policy })
         );
@@ -141,13 +142,13 @@ describe(`further subscriptions, wo/ unsubscribe`, () => {
 
         timeline.shift();
         const one = timeline.shift();
-        await waitTime(one?.ms.total || null);
+        await Util.wait(one?.ms.total || null);
 
-        const o2 = setupObserver();
+        const o2 = Setup.observer();
         observable.subscribe(o2.observer);
 
         for (const { ms, values, end } of timeline) {
-          await waitTime(ms.add);
+          await Util.wait(ms.add);
           o2.assertObserverCalledTimes({
             start: 1,
             next: values.total.length - (one?.values.total.length || 0),
@@ -161,7 +162,7 @@ describe(`further subscriptions, wo/ unsubscribe`, () => {
   test(`observer calls propagate, w/ replay`, async () => {
     for (const policy of policies) {
       for (const withError of [false, true]) {
-        const { observable, timeline } = setupObservable(
+        const { observable, timeline } = Setup.observable(
           { error: withError },
           share({ policy, replay: 2 })
         );
@@ -169,9 +170,9 @@ describe(`further subscriptions, wo/ unsubscribe`, () => {
 
         timeline.shift();
         const one = timeline.shift();
-        await waitTime(one?.ms.total || null);
+        await Util.wait(one?.ms.total || null);
 
-        const o2 = setupObserver();
+        const o2 = Setup.observer();
         observable.subscribe(o2.observer);
 
         o2.assertObserverCalledTimes({
@@ -182,7 +183,7 @@ describe(`further subscriptions, wo/ unsubscribe`, () => {
         });
 
         for (const { ms, values, end } of timeline) {
-          await waitTime(ms.add);
+          await Util.wait(ms.add);
           o2.assertObserverCalledTimes({
             start: 1,
             next: 2 + values.total.length - (one?.values.total.length || 0),
@@ -197,7 +198,7 @@ describe(`further subscriptions, wo/ unsubscribe`, () => {
 
 describe(`further subscriptions, w/ unsubscribe`, () => {
   test(`keep-open: subscriber is not called on resubscription`, () => {
-    const { observable, assertObservableCalledTimes } = setupObservable(
+    const { observable, assertObservableCalledTimes } = Setup.observable(
       { error: false },
       share({ policy: 'keep-open' })
     );
@@ -210,10 +211,10 @@ describe(`further subscriptions, w/ unsubscribe`, () => {
   test(`keep-open: subscriber is not called after error/complete`, async () => {
     for (const withError of [false, true]) {
       const { observable, termination, assertObservableCalledTimes } =
-        setupObservable({ error: withError }, share({ policy: 'keep-open' }));
+        Setup.observable({ error: withError }, share({ policy: 'keep-open' }));
 
       observable.subscribe({ error: () => undefined }).unsubscribe();
-      await waitTime(termination);
+      await Util.wait(termination);
       observable.subscribe({ error: () => undefined });
 
       assertObservableCalledTimes({ subscriber: 1, teardown: 1 });
@@ -222,27 +223,27 @@ describe(`further subscriptions, w/ unsubscribe`, () => {
   test(`keep-open: teardown is called once on error/complete`, async () => {
     for (const withError of [false, true]) {
       const { observable, termination, assertObservableCalledTimes } =
-        setupObservable({ error: withError }, share({ policy: 'keep-open' }));
+        Setup.observable({ error: withError }, share({ policy: 'keep-open' }));
 
       observable.subscribe({ error: () => undefined }).unsubscribe();
-      await waitTime(termination);
+      await Util.wait(termination);
       observable.subscribe({ error: () => undefined });
-      await waitTime(termination);
+      await Util.wait(termination);
 
       assertObservableCalledTimes({ subscriber: 1, teardown: 1 });
     }
   });
   test(`keep-open: subscriptions after error/complete immediately error/complete`, async () => {
     for (const withError of [false, true]) {
-      const { observable, termination } = setupObservable(
+      const { observable, termination } = Setup.observable(
         { error: withError },
         share({ policy: 'keep-open' })
       );
 
       observable.subscribe({ error: () => undefined }).unsubscribe();
-      await waitTime(termination);
+      await Util.wait(termination);
 
-      const { observer, assertObserverCalledTimes } = setupObserver();
+      const { observer, assertObserverCalledTimes } = Setup.observer();
       observable.subscribe(observer);
       assertObserverCalledTimes({
         start: 1,
@@ -254,7 +255,7 @@ describe(`further subscriptions, w/ unsubscribe`, () => {
   });
   test(`keep-open: observer calls propagate, wo/ replay`, async () => {
     for (const withError of [false, true]) {
-      const { observable, timeline } = setupObservable(
+      const { observable, timeline } = Setup.observable(
         { error: withError },
         share({ policy: 'keep-open' })
       );
@@ -263,13 +264,13 @@ describe(`further subscriptions, w/ unsubscribe`, () => {
 
       timeline.shift();
       const one = timeline.shift();
-      await waitTime(one?.ms.total || null);
+      await Util.wait(one?.ms.total || null);
 
-      const o2 = setupObserver();
+      const o2 = Setup.observer();
       observable.subscribe(o2.observer);
 
       for (const { ms, values, end } of timeline) {
-        await waitTime(ms.add);
+        await Util.wait(ms.add);
         o2.assertObserverCalledTimes({
           start: 1,
           next: values.total.length - (one?.values.total.length || 0),
@@ -281,7 +282,7 @@ describe(`further subscriptions, w/ unsubscribe`, () => {
   });
   test(`keep-open: observer calls propagate, w/ replay`, async () => {
     for (const withError of [false, true]) {
-      const { observable, timeline } = setupObservable(
+      const { observable, timeline } = Setup.observable(
         { error: withError },
         share({ policy: 'keep-open', replay: 2 })
       );
@@ -289,9 +290,9 @@ describe(`further subscriptions, w/ unsubscribe`, () => {
 
       timeline.shift();
       const one = timeline.shift();
-      await waitTime(one?.ms.total || null);
+      await Util.wait(one?.ms.total || null);
 
-      const o2 = setupObserver();
+      const o2 = Setup.observer();
       observable.subscribe(o2.observer);
 
       o2.assertObserverCalledTimes({
@@ -302,7 +303,7 @@ describe(`further subscriptions, w/ unsubscribe`, () => {
       });
 
       for (const { ms, values, end } of timeline) {
-        await waitTime(ms.add);
+        await Util.wait(ms.add);
         o2.assertObserverCalledTimes({
           start: 1,
           next: 2 + values.total.length - (one?.values.total.length || 0),
@@ -313,7 +314,7 @@ describe(`further subscriptions, w/ unsubscribe`, () => {
     }
   });
   test(`keep-closed: teardown is immediately called`, async () => {
-    const { observable, assertObservableCalledTimes } = setupObservable(
+    const { observable, assertObservableCalledTimes } = Setup.observable(
       { error: false },
       share({ policy: 'keep-closed' })
     );
@@ -322,7 +323,7 @@ describe(`further subscriptions, w/ unsubscribe`, () => {
     assertObservableCalledTimes({ subscriber: 1, teardown: 1 });
   });
   test(`keep-closed: subscriber is not called on resubscription`, () => {
-    const { observable, assertObservableCalledTimes } = setupObservable(
+    const { observable, assertObservableCalledTimes } = Setup.observable(
       { error: false },
       share({ policy: 'keep-closed' })
     );
@@ -334,16 +335,16 @@ describe(`further subscriptions, w/ unsubscribe`, () => {
   });
   test(`keep-closed: subscriptions after error/complete immediately error/complete`, async () => {
     for (const withError of [false, true]) {
-      const { observable, termination } = setupObservable(
+      const { observable, termination } = Setup.observable(
         { error: withError },
         share({ policy: 'keep-closed' })
       );
 
       const subscription = observable.subscribe({ error: () => undefined });
-      await waitTime(termination);
+      await Util.wait(termination);
       subscription.unsubscribe();
 
-      const { observer, assertObserverCalledTimes } = setupObserver();
+      const { observer, assertObserverCalledTimes } = Setup.observer();
       observable.subscribe(observer);
       assertObserverCalledTimes({
         start: 1,
@@ -354,14 +355,14 @@ describe(`further subscriptions, w/ unsubscribe`, () => {
     }
   });
   test(`keep-closed: immediately errors`, async () => {
-    const { observable } = setupObservable(
+    const { observable } = Setup.observable(
       { error: false },
       share({ policy: 'keep-closed' })
     );
 
     observable.subscribe({ error: () => undefined }).unsubscribe();
 
-    const o2 = setupObserver();
+    const o2 = Setup.observer();
     observable.subscribe(o2.observer);
 
     o2.assertObserverCalledTimes({
@@ -372,7 +373,7 @@ describe(`further subscriptions, w/ unsubscribe`, () => {
     });
   });
   test(`on-demand: teardown is immediately called`, () => {
-    const { observable, assertObservableCalledTimes } = setupObservable(
+    const { observable, assertObservableCalledTimes } = Setup.observable(
       { error: false },
       share({ policy: 'on-demand' })
     );
@@ -382,7 +383,7 @@ describe(`further subscriptions, w/ unsubscribe`, () => {
     assertObservableCalledTimes({ subscriber: 1, teardown: 1 });
   });
   test(`on-demand: subscriber is called on resubscription`, () => {
-    const { observable, assertObservableCalledTimes } = setupObservable(
+    const { observable, assertObservableCalledTimes } = Setup.observable(
       { error: false },
       share({ policy: 'on-demand' })
     );
@@ -395,10 +396,10 @@ describe(`further subscriptions, w/ unsubscribe`, () => {
   test(`on-demand: subscriber is not called after error/complete`, async () => {
     for (const withError of [false, true]) {
       const { observable, termination, assertObservableCalledTimes } =
-        setupObservable({ error: withError }, share({ policy: 'on-demand' }));
+        Setup.observable({ error: withError }, share({ policy: 'on-demand' }));
 
       const subscription = observable.subscribe({ error: () => undefined });
-      await waitTime(termination);
+      await Util.wait(termination);
       subscription.unsubscribe();
       observable.subscribe({ error: () => undefined });
 
@@ -408,29 +409,29 @@ describe(`further subscriptions, w/ unsubscribe`, () => {
   test(`on-demand: teardown is called once on error/complete`, async () => {
     for (const withError of [false, true]) {
       const { observable, termination, assertObservableCalledTimes } =
-        setupObservable({ error: withError }, share({ policy: 'on-demand' }));
+        Setup.observable({ error: withError }, share({ policy: 'on-demand' }));
 
       const subscription = observable.subscribe({ error: () => undefined });
-      await waitTime(termination);
+      await Util.wait(termination);
       subscription.unsubscribe();
       observable.subscribe({ error: () => undefined });
-      await waitTime(termination);
+      await Util.wait(termination);
 
       assertObservableCalledTimes({ subscriber: 1, teardown: 1 });
     }
   });
   test(`on-demand: subscriptions after error/complete immediately error/complete`, async () => {
     for (const withError of [false, true]) {
-      const { observable, termination } = setupObservable(
+      const { observable, termination } = Setup.observable(
         { error: withError },
         share({ policy: 'on-demand' })
       );
 
       const subscription = observable.subscribe({ error: () => undefined });
-      await waitTime(termination);
+      await Util.wait(termination);
       subscription.unsubscribe();
 
-      const { observer, assertObserverCalledTimes } = setupObserver();
+      const { observer, assertObserverCalledTimes } = Setup.observer();
       observable.subscribe(observer);
       assertObserverCalledTimes({
         start: 1,
@@ -442,18 +443,18 @@ describe(`further subscriptions, w/ unsubscribe`, () => {
   });
   test(`on-demand: observer calls propagate, wo/ replay`, async () => {
     for (const withError of [false, true]) {
-      const { observable, timeline } = setupObservable(
+      const { observable, timeline } = Setup.observable(
         { error: withError },
         share({ policy: 'on-demand' })
       );
 
       observable.subscribe({ error: () => undefined }).unsubscribe();
 
-      const o2 = setupObserver();
+      const o2 = Setup.observer();
       observable.subscribe(o2.observer);
 
       for (const { ms, values, end } of timeline) {
-        await waitTime(ms.add);
+        await Util.wait(ms.add);
         o2.assertObserverCalledTimes({
           start: 1,
           next: values.total.length,
@@ -465,18 +466,18 @@ describe(`further subscriptions, w/ unsubscribe`, () => {
   });
   test(`on-demand: observer calls propagate, w/ replay`, async () => {
     for (const withError of [false, true]) {
-      const { observable, timeline } = setupObservable(
+      const { observable, timeline } = Setup.observable(
         { error: withError },
         share({ policy: 'on-demand', replay: 2 })
       );
 
       observable.subscribe({ error: () => undefined }).unsubscribe();
 
-      const o2 = setupObserver();
+      const o2 = Setup.observer();
       observable.subscribe(o2.observer);
 
       for (const { ms, values, end } of timeline) {
-        await waitTime(ms.add);
+        await Util.wait(ms.add);
         o2.assertObserverCalledTimes({
           start: 1,
           next: values.total.length,

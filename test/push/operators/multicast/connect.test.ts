@@ -1,9 +1,10 @@
 import { test } from '@jest/globals';
+import { Util } from '@helpers';
 import { connect } from '@push';
-import { setupObservable, setupObserver, waitTime } from '../../../setup';
+import { Setup } from '../../../setup';
 
 test(`subscriber is called on initialization`, () => {
-  const { assertObservableCalledTimes } = setupObservable(
+  const { assertObservableCalledTimes } = Setup.observable(
     { error: false },
     connect()
   );
@@ -12,17 +13,17 @@ test(`subscriber is called on initialization`, () => {
 });
 test(`teardown is called on error/complete`, async () => {
   for (const withError of [false, true]) {
-    const { termination, assertObservableCalledTimes } = setupObservable(
+    const { termination, assertObservableCalledTimes } = Setup.observable(
       { error: withError },
       connect()
     );
 
-    await waitTime(termination);
+    await Util.wait(termination);
     assertObservableCalledTimes({ subscriber: 1, teardown: 1 });
   }
 });
 test(`subscriber is not called on subscription`, () => {
-  const { observable, assertObservableCalledTimes } = setupObservable(
+  const { observable, assertObservableCalledTimes } = Setup.observable(
     { error: false },
     connect()
   );
@@ -34,8 +35,8 @@ test(`subscriber is not called on subscription`, () => {
 test(`subscriber is not called after error/complete`, async () => {
   for (const withError of [false, true]) {
     const { observable, termination, assertObservableCalledTimes } =
-      setupObservable({ error: withError }, connect());
-    await waitTime(termination);
+      Setup.observable({ error: withError }, connect());
+    await Util.wait(termination);
 
     observable.subscribe({ error: () => undefined });
     assertObservableCalledTimes({ subscriber: 1, teardown: 1 });
@@ -44,24 +45,24 @@ test(`subscriber is not called after error/complete`, async () => {
 test(`teardown is called once on error/complete`, async () => {
   for (const withError of [false, true]) {
     const { observable, termination, assertObservableCalledTimes } =
-      setupObservable({ error: withError }, connect());
+      Setup.observable({ error: withError }, connect());
 
     observable.subscribe({ error: () => undefined });
     observable.subscribe({ error: () => undefined });
 
-    await waitTime(termination);
+    await Util.wait(termination);
     assertObservableCalledTimes({ subscriber: 1, teardown: 1 });
   }
 });
 test(`subscriptions after error/complete immediately error/complete`, async () => {
   for (const withError of [false, true]) {
-    const { observable, termination } = setupObservable(
+    const { observable, termination } = Setup.observable(
       { error: withError },
       connect()
     );
 
-    await waitTime(termination);
-    const { observer, assertObserverCalledTimes } = setupObserver();
+    await Util.wait(termination);
+    const { observer, assertObserverCalledTimes } = Setup.observer();
 
     observable.subscribe(observer);
     assertObserverCalledTimes({
@@ -74,12 +75,12 @@ test(`subscriptions after error/complete immediately error/complete`, async () =
 });
 test(`observer calls propagate, wo/ replay`, async () => {
   for (const withError of [false, true]) {
-    const { observable, timeline } = setupObservable(
+    const { observable, timeline } = Setup.observable(
       { error: withError },
       connect()
     );
 
-    const { observer, assertObserverCalledTimes } = setupObserver();
+    const { observer, assertObserverCalledTimes } = Setup.observer();
     observable.subscribe({ error: () => undefined }).unsubscribe();
     observable.subscribe(observer);
 
@@ -88,7 +89,7 @@ test(`observer calls propagate, wo/ replay`, async () => {
       if (ms.total === null) {
         nSyncValues += values.add.length;
       } else {
-        await waitTime(ms.add);
+        await Util.wait(ms.add);
         assertObserverCalledTimes({
           start: 1,
           next: values.total.length - nSyncValues,
@@ -101,12 +102,12 @@ test(`observer calls propagate, wo/ replay`, async () => {
 });
 test(`observer calls propagate, w/ replay`, async () => {
   for (const withError of [false, true]) {
-    const { observable, timeline } = setupObservable(
+    const { observable, timeline } = Setup.observable(
       { error: withError },
       connect({ replay: 2 })
     );
 
-    const { observer, assertObserverCalledTimes } = setupObserver();
+    const { observer, assertObserverCalledTimes } = Setup.observer();
     observable.subscribe({ error: () => undefined }).unsubscribe();
     observable.subscribe(observer);
 
@@ -115,7 +116,7 @@ test(`observer calls propagate, w/ replay`, async () => {
       if (ms.total === null) {
         nSyncValues += values.add.length;
       } else {
-        await waitTime(ms.add);
+        await Util.wait(ms.add);
         assertObserverCalledTimes({
           start: 1,
           next: values.total.length - Math.max(0, nSyncValues - 2),
