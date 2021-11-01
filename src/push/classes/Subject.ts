@@ -3,6 +3,8 @@ import { Push } from '@definitions';
 import { from } from '../operators/create/from';
 import { tap } from '../operators/tap';
 import { Observable } from './Observable';
+import { Empty, NullaryFn, UnaryFn } from 'type-core';
+import { Globals } from '@helpers';
 
 export declare namespace Subject {
   export interface Options<U> {
@@ -59,22 +61,46 @@ export class Subject<T = any, U extends T | void = T | void>
     return subject;
   }
   #value: T | U;
-  #closed: boolean;
-  #observers: Set<Push.SubscriptionObserver<T>>;
+  #observer: Push.SubscriptionObserver<T>;
+  #observable: Observable<T>;
+  #subscription: Push.Subscription;
   public constructor(options?: Subject.Options<U>) {
-    const observers = new Set<Push.SubscriptionObserver<T>>();
     super((obs) => {
+      this.#observer = obs;
+    });
+
+    this.#value = (options ? options.value : undefined) as U;
+
+    const observers = new Set<Push.SubscriptionObserver<T>>();
+    this.#observable = new Observable((obs) => {
       observers.add(obs);
       return () => {
         observers.delete(obs);
       };
     });
-    this.#value = (options ? options.value : undefined) as U;
-    this.#closed = false;
-    this.#observers = observers;
+
+    super.subscribe({
+      start: (subs) => {
+        this.#subscription = subs;
+      },
+      next: (value) => {
+        this.#value = value;
+        observers.forEach((obs) => obs.next(value));
+      },
+      error: (error) => {
+        if (!observers.size) {
+          Globals.onUnhandledError(error, this.#subscription);
+        } else {
+          observers.forEach((obs) => obs.error(error));
+        }
+      },
+      complete: () => {
+        observers.forEach((obs) => obs.complete());
+      }
+    });
   }
   public [Symbol.observable](): Observable<T> {
-    return Observable.from(this);
+    return this.#observable;
   }
   /**
    * Last value emitted by a Subject or, in its abscense,
@@ -87,33 +113,33 @@ export class Subject<T = any, U extends T | void = T | void>
    * Indicates the state of the subject.
    */
   public get closed(): boolean {
-    return this.#closed;
+    return this.#subscription.closed;
   }
   /**
    * Emits a value.
    */
   public next(value: T): void {
-    this.#value = value;
-    for (const observer of this.#observers) {
-      observer.next(value);
-    }
+    this.#observer.next(value);
   }
   /**
    * Emits an error.
    */
   public error(error: Error): void {
-    this.#closed = true;
-    for (const observer of this.#observers) {
-      observer.error(error);
-    }
+    this.#observer.error(error);
   }
   /**
    * Emits a complete signal.
    */
   public complete(): void {
-    this.#closed = true;
-    for (const observer of this.#observers) {
-      observer.complete();
-    }
+    this.#observer.complete();
+  }
+  public subscribe(observer?: Empty | Push.Observer<T>): Push.Subscription;
+  public subscribe(
+    onNext: UnaryFn<T>,
+    onError?: UnaryFn<Error>,
+    onComplete?: NullaryFn
+  ): Push.Subscription;
+  public subscribe(observer: any, ...arr: any[]): Push.Subscription {
+    return this.#observable.subscribe(observer, ...arr);
   }
 }
