@@ -1,6 +1,6 @@
 import { Push } from '@definitions';
-import { intercept } from '../../utils/intercept';
-import { Observable } from '../../classes/Observable';
+import { intercept } from '../utils/intercept';
+import { Observable } from '../classes/Observable';
 import { from } from './from';
 
 export function merge<A>(a: Push.Convertible<A>): Push.Observable<A>;

@@ -1,6 +1,6 @@
 import { into } from 'pipettes';
 import { Push } from '@definitions';
-import { from } from '../operators/create/from';
+import { from } from '../create/from';
 import { tap } from '../operators/tap';
 import { Observable } from './Observable';
 import { Empty, NullaryFn, UnaryFn } from 'type-core';

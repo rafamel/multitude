@@ -3,7 +3,7 @@ import { Push } from '@definitions';
 import { Observable } from '../../classes/Observable';
 import { transform } from '../../utils/transform';
 import { intercept } from '../../utils/intercept';
-import { from } from '../create/from';
+import { from } from '../../create/from';
 
 export interface CatchesOptions<T, U> {
   /**

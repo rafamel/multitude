@@ -1,9 +1,9 @@
 import { Dictionary } from 'type-core';
 import { into } from 'pipettes';
 import { Push } from '@definitions';
-import { intercept } from '../../utils/intercept';
-import { Observable } from '../../classes/Observable';
-import { map } from '../map/map';
+import { intercept } from '../utils/intercept';
+import { Observable } from '../classes/Observable';
+import { map } from '../operators/map/map';
 import { from } from './from';
 import { merge } from './merge';
 

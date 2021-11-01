@@ -1,7 +1,7 @@
 import { NullaryFn } from 'type-core';
 import { Push } from '@definitions';
-import { Observable } from '../../classes/Observable';
 import { Util } from '@helpers';
+import { Observable } from '../classes/Observable';
 
 export function fromExecutor<T>(
   executor: NullaryFn<PromiseLike<T> | T>

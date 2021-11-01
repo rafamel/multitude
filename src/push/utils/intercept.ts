@@ -1,6 +1,6 @@
 import { Push } from '@definitions';
 import { Talkback } from '../classes/Talkback';
-import { from } from '../operators/create/from';
+import { from } from '../create/from';
 
 interface InterceptOptions<T, U> {
   between: Push.Observer<T>;
