@@ -1,5 +1,4 @@
 export * from './combine';
-export * from './defer';
 export * from './from';
 export * from './fromEvent';
 export * from './fromExecutor';
