@@ -48,11 +48,11 @@ export class Util {
       : undefined;
   }
   public static resolves<T, U = T, V = U>(
-    fn: NullaryFn<Promise<T> | T>,
+    fn: NullaryFn<PromiseLike<T> | T>,
     data: Empty | UnaryFn<T, U>,
     error: Empty | UnaryFn<Error, V>
-  ): U | V | Promise<U | V> {
-    let response: T | Promise<T>;
+  ): U | V | PromiseLike<U | V> {
+    let response: T | PromiseLike<T>;
     try {
       response = fn();
     } catch (err) {
