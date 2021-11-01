@@ -1,22 +1,20 @@
 import { Push } from '@definitions';
 import { Subscription } from '../Subscription';
 
-const $observer = Symbol('observer');
+const weakmap = new WeakMap<Subscription, Push.Observer>();
 
 export class Accessors {
   public static setObserver<T>(
     subscription: Subscription<T>,
     observer: Push.Observer<T> | null
   ): void {
-    Object.defineProperty(subscription, $observer, {
-      enumerable: false,
-      writable: true,
-      value: observer
-    });
+    observer === null
+      ? weakmap.delete(subscription)
+      : weakmap.set(subscription, observer);
   }
   public static getObserver<T>(
     subscription: Subscription<T>
   ): Push.Observer<T> | null {
-    return (subscription as any)[$observer];
+    return weakmap.get(subscription) || null;
   }
 }
