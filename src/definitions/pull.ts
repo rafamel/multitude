@@ -14,20 +14,22 @@ export declare namespace Pull {
   }
 
   /* Pullable */
-  export type Convertible<O, I = void> =
+  export type Convertible<O = any, I = any> =
     | Like<O, I>
     | Compatible<O, I>
     | Iterable<O>;
 
-  export interface Like<O, I = void> {
+  export interface Like<O = any, I = any> {
     source: Source<O, I>;
   }
 
-  export interface Compatible<O, I = void> {
+  export interface Compatible<O = any, I = any> {
     [Symbol.asyncIterator](): AsyncIterator<O, void, I>;
   }
 
-  export interface Pullable<O, I = void> extends Compatible<O, I>, Like<O, I> {
+  export interface Pullable<O = any, I = any>
+    extends Compatible<O, I>,
+      Like<O, I> {
     consume(consumer: Consumer<O, I>): void;
   }
 
@@ -39,7 +41,6 @@ export declare namespace Pull {
   export type Sink<O, I> = () => PullableIterator<I, O>;
 
   /* Iterators */
-  // TODO: add "finally" to iterators
   export interface Iterator<O, I> {
     next?: (value: I) => MaybePromise<Response<O>>;
     error?: (reason: Error) => MaybePromise<Response<O>>;
