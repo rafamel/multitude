@@ -1,7 +1,9 @@
 import { TypeGuard } from 'type-core';
 import { Pull } from '@definitions';
 import { isPullableCompatible, isPullableLike } from '../utils';
-import { Consume, From, Validate } from './helpers';
+import { From } from './helpers/From';
+import { Validate } from './helpers/Validate';
+import { Consume } from './helpers/Consume';
 import { PullableIterator } from './PullableIterator';
 
 export class Pullable<O = any, I = void> implements Pull.Pullable<O, I> {

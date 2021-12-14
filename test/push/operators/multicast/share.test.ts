@@ -1,5 +1,5 @@
 import { test, expect, describe } from '@jest/globals';
-import { Util } from '@helpers';
+import { wait } from 'promist';
 import { share, SharePolicy } from '@push';
 import { Setup } from '../../../setup';
 
@@ -38,7 +38,7 @@ describe(`first subscription`, () => {
 
         const subs1 = observable.subscribe({ error: () => undefined });
 
-        await Util.wait(termination);
+        await wait(termination);
         expect(subs1.closed).toBe(true);
         assertObservableCalledTimes({ subscriber: 1, teardown: 1 });
       }
@@ -55,7 +55,7 @@ describe(`first subscription`, () => {
 
         observable.subscribe(observer);
         for (const { ms, values, end } of timeline) {
-          await Util.wait(ms.add);
+          await wait(ms.add);
           assertObserverCalledTimes({
             start: 1,
             next: values.total.length,
@@ -88,7 +88,7 @@ describe(`further subscriptions, wo/ unsubscribe`, () => {
           Setup.observable({ error: withError }, share({ policy }));
 
         observable.subscribe({ error: () => undefined });
-        await Util.wait(termination);
+        await wait(termination);
 
         observable.subscribe({ error: () => undefined });
         assertObservableCalledTimes({ subscriber: 1, teardown: 1 });
@@ -104,7 +104,7 @@ describe(`further subscriptions, wo/ unsubscribe`, () => {
         observable.subscribe({ error: () => undefined });
         observable.subscribe({ error: () => undefined });
 
-        await Util.wait(termination);
+        await wait(termination);
         assertObservableCalledTimes({ subscriber: 1, teardown: 1 });
       }
     }
@@ -118,7 +118,7 @@ describe(`further subscriptions, wo/ unsubscribe`, () => {
         );
 
         observable.subscribe({ error: () => undefined });
-        await Util.wait(termination);
+        await wait(termination);
 
         const { observer, assertObserverCalledTimes } = Setup.observer();
         observable.subscribe(observer);
@@ -142,13 +142,13 @@ describe(`further subscriptions, wo/ unsubscribe`, () => {
 
         timeline.shift();
         const one = timeline.shift();
-        await Util.wait(one?.ms.total || null);
+        await wait(one?.ms.total || null);
 
         const o2 = Setup.observer();
         observable.subscribe(o2.observer);
 
         for (const { ms, values, end } of timeline) {
-          await Util.wait(ms.add);
+          await wait(ms.add);
           o2.assertObserverCalledTimes({
             start: 1,
             next: values.total.length - (one?.values.total.length || 0),
@@ -170,7 +170,7 @@ describe(`further subscriptions, wo/ unsubscribe`, () => {
 
         timeline.shift();
         const one = timeline.shift();
-        await Util.wait(one?.ms.total || null);
+        await wait(one?.ms.total || null);
 
         const o2 = Setup.observer();
         observable.subscribe(o2.observer);
@@ -183,7 +183,7 @@ describe(`further subscriptions, wo/ unsubscribe`, () => {
         });
 
         for (const { ms, values, end } of timeline) {
-          await Util.wait(ms.add);
+          await wait(ms.add);
           o2.assertObserverCalledTimes({
             start: 1,
             next: 2 + values.total.length - (one?.values.total.length || 0),
@@ -214,7 +214,7 @@ describe(`further subscriptions, w/ unsubscribe`, () => {
         Setup.observable({ error: withError }, share({ policy: 'keep-open' }));
 
       observable.subscribe({ error: () => undefined }).unsubscribe();
-      await Util.wait(termination);
+      await wait(termination);
       observable.subscribe({ error: () => undefined });
 
       assertObservableCalledTimes({ subscriber: 1, teardown: 1 });
@@ -226,9 +226,9 @@ describe(`further subscriptions, w/ unsubscribe`, () => {
         Setup.observable({ error: withError }, share({ policy: 'keep-open' }));
 
       observable.subscribe({ error: () => undefined }).unsubscribe();
-      await Util.wait(termination);
+      await wait(termination);
       observable.subscribe({ error: () => undefined });
-      await Util.wait(termination);
+      await wait(termination);
 
       assertObservableCalledTimes({ subscriber: 1, teardown: 1 });
     }
@@ -241,7 +241,7 @@ describe(`further subscriptions, w/ unsubscribe`, () => {
       );
 
       observable.subscribe({ error: () => undefined }).unsubscribe();
-      await Util.wait(termination);
+      await wait(termination);
 
       const { observer, assertObserverCalledTimes } = Setup.observer();
       observable.subscribe(observer);
@@ -264,13 +264,13 @@ describe(`further subscriptions, w/ unsubscribe`, () => {
 
       timeline.shift();
       const one = timeline.shift();
-      await Util.wait(one?.ms.total || null);
+      await wait(one?.ms.total || null);
 
       const o2 = Setup.observer();
       observable.subscribe(o2.observer);
 
       for (const { ms, values, end } of timeline) {
-        await Util.wait(ms.add);
+        await wait(ms.add);
         o2.assertObserverCalledTimes({
           start: 1,
           next: values.total.length - (one?.values.total.length || 0),
@@ -290,7 +290,7 @@ describe(`further subscriptions, w/ unsubscribe`, () => {
 
       timeline.shift();
       const one = timeline.shift();
-      await Util.wait(one?.ms.total || null);
+      await wait(one?.ms.total || null);
 
       const o2 = Setup.observer();
       observable.subscribe(o2.observer);
@@ -303,7 +303,7 @@ describe(`further subscriptions, w/ unsubscribe`, () => {
       });
 
       for (const { ms, values, end } of timeline) {
-        await Util.wait(ms.add);
+        await wait(ms.add);
         o2.assertObserverCalledTimes({
           start: 1,
           next: 2 + values.total.length - (one?.values.total.length || 0),
@@ -341,7 +341,7 @@ describe(`further subscriptions, w/ unsubscribe`, () => {
       );
 
       const subscription = observable.subscribe({ error: () => undefined });
-      await Util.wait(termination);
+      await wait(termination);
       subscription.unsubscribe();
 
       const { observer, assertObserverCalledTimes } = Setup.observer();
@@ -399,7 +399,7 @@ describe(`further subscriptions, w/ unsubscribe`, () => {
         Setup.observable({ error: withError }, share({ policy: 'on-demand' }));
 
       const subscription = observable.subscribe({ error: () => undefined });
-      await Util.wait(termination);
+      await wait(termination);
       subscription.unsubscribe();
       observable.subscribe({ error: () => undefined });
 
@@ -412,10 +412,10 @@ describe(`further subscriptions, w/ unsubscribe`, () => {
         Setup.observable({ error: withError }, share({ policy: 'on-demand' }));
 
       const subscription = observable.subscribe({ error: () => undefined });
-      await Util.wait(termination);
+      await wait(termination);
       subscription.unsubscribe();
       observable.subscribe({ error: () => undefined });
-      await Util.wait(termination);
+      await wait(termination);
 
       assertObservableCalledTimes({ subscriber: 1, teardown: 1 });
     }
@@ -428,7 +428,7 @@ describe(`further subscriptions, w/ unsubscribe`, () => {
       );
 
       const subscription = observable.subscribe({ error: () => undefined });
-      await Util.wait(termination);
+      await wait(termination);
       subscription.unsubscribe();
 
       const { observer, assertObserverCalledTimes } = Setup.observer();
@@ -454,7 +454,7 @@ describe(`further subscriptions, w/ unsubscribe`, () => {
       observable.subscribe(o2.observer);
 
       for (const { ms, values, end } of timeline) {
-        await Util.wait(ms.add);
+        await wait(ms.add);
         o2.assertObserverCalledTimes({
           start: 1,
           next: values.total.length,
@@ -477,7 +477,7 @@ describe(`further subscriptions, w/ unsubscribe`, () => {
       observable.subscribe(o2.observer);
 
       for (const { ms, values, end } of timeline) {
-        await Util.wait(ms.add);
+        await wait(ms.add);
         o2.assertObserverCalledTimes({
           start: 1,
           next: values.total.length,

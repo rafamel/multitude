@@ -1,11 +1,11 @@
-import { MaybePromise, Dictionary, TypeGuard } from 'type-core';
+import { MaybePromise, TypeGuard } from 'type-core';
+import { SyncPromise } from 'promist';
 import { Pull } from '@definitions';
-import { Util } from '@helpers';
-import { Validate } from './helpers';
+import { Validate } from './helpers/Validate';
 
 export class PullableIterator<O, I> implements Pull.PullableIterator<O, I> {
   #closed: boolean;
-  #iterator: Dictionary;
+  #iterator: Pull.Iterator<O, I>;
   public constructor(iterator: Pull.Iterator<O, I>) {
     Validate.counter(iterator);
 
@@ -16,54 +16,51 @@ export class PullableIterator<O, I> implements Pull.PullableIterator<O, I> {
     if (this.#closed) return { complete: true };
 
     const iterator = this.#iterator;
+    const method = iterator.next;
+    if (TypeGuard.isEmpty(method)) return { complete: true };
 
-    let method: any = Util.noop;
-    return Util.resolves<any>(
-      () => (method = iterator.next).call(iterator, value),
-      (result) => {
-        if (TypeGuard.isObject(result)) return result;
-        throw new TypeError('Expected result to be an object');
-      },
-      (err) => {
-        if (TypeGuard.isEmpty(method)) return { complete: true };
-        throw err;
-      }
-    );
+    return SyncPromise.from(() => method.call(iterator, value))
+      .operate((response) => {
+        if (TypeGuard.isObject(response)) return response;
+        throw new TypeError('Expected response to be an object');
+      })
+      .consume();
   }
   public error(error: Error): MaybePromise<Pull.Response<O>> {
     if (this.#closed) return { complete: true };
 
     const iterator = this.#iterator;
 
-    let method: any = Util.noop;
-    return Util.resolves<any>(
-      () => (method = iterator.error).call(iterator, error),
-      (result) => {
-        if (TypeGuard.isObject(result)) return result;
-
-        this.#closed = true;
-        throw new TypeError('Expected result to be an object');
-      },
-      (err) => {
-        this.#closed = true;
+    return SyncPromise.from(() => null)
+      .operate(() => {
+        const method = iterator.error;
         if (TypeGuard.isEmpty(method)) throw error;
-        else throw err;
-      }
-    );
+        return method.call(iterator, error);
+      })
+      .operate(
+        (response) => {
+          if (TypeGuard.isObject(response)) return response;
+
+          this.#closed = true;
+          throw new TypeError('Expected response to be an object');
+        },
+        (err) => {
+          this.#closed = true;
+          throw err;
+        }
+      )
+      .consume();
   }
   public complete(): MaybePromise<void> {
     if (this.#closed) return;
 
-    const iterator = this.#iterator;
-
     this.#closed = true;
-    let method: any = Util.noop;
-    return Util.resolves<any>(
-      () => (method = iterator.complete).call(iterator),
-      null,
-      (err) => {
-        if (!TypeGuard.isEmpty(method)) throw err;
-      }
-    );
+    const iterator = this.#iterator;
+    const method = iterator.complete;
+    if (TypeGuard.isEmpty(method)) return;
+
+    return SyncPromise.from(() => method.call(iterator))
+      .operate(() => undefined)
+      .consume();
   }
 }

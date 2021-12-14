@@ -1,5 +1,5 @@
 import { test } from '@jest/globals';
-import { Util } from '@helpers';
+import { wait } from 'promist';
 import { connect } from '@push';
 import { Setup } from '../../../setup';
 
@@ -18,7 +18,7 @@ test(`teardown is called on error/complete`, async () => {
       connect()
     );
 
-    await Util.wait(termination);
+    await wait(termination);
     assertObservableCalledTimes({ subscriber: 1, teardown: 1 });
   }
 });
@@ -36,7 +36,7 @@ test(`subscriber is not called after error/complete`, async () => {
   for (const withError of [false, true]) {
     const { observable, termination, assertObservableCalledTimes } =
       Setup.observable({ error: withError }, connect());
-    await Util.wait(termination);
+    await wait(termination);
 
     observable.subscribe({ error: () => undefined });
     assertObservableCalledTimes({ subscriber: 1, teardown: 1 });
@@ -50,7 +50,7 @@ test(`teardown is called once on error/complete`, async () => {
     observable.subscribe({ error: () => undefined });
     observable.subscribe({ error: () => undefined });
 
-    await Util.wait(termination);
+    await wait(termination);
     assertObservableCalledTimes({ subscriber: 1, teardown: 1 });
   }
 });
@@ -61,7 +61,7 @@ test(`subscriptions after error/complete immediately error/complete`, async () =
       connect()
     );
 
-    await Util.wait(termination);
+    await wait(termination);
     const { observer, assertObserverCalledTimes } = Setup.observer();
 
     observable.subscribe(observer);
@@ -89,7 +89,7 @@ test(`observer calls propagate, wo/ replay`, async () => {
       if (ms.total === null) {
         nSyncValues += values.add.length;
       } else {
-        await Util.wait(ms.add);
+        await wait(ms.add);
         assertObserverCalledTimes({
           start: 1,
           next: values.total.length - nSyncValues,
@@ -116,7 +116,7 @@ test(`observer calls propagate, w/ replay`, async () => {
       if (ms.total === null) {
         nSyncValues += values.add.length;
       } else {
-        await Util.wait(ms.add);
+        await wait(ms.add);
         assertObserverCalledTimes({
           start: 1,
           next: values.total.length - Math.max(0, nSyncValues - 2),
