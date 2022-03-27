@@ -1,39 +1,29 @@
-import { into } from 'pipettes';
+import { NullaryFn } from 'type-core';
 import { Push } from '@definitions';
+import { Util } from '@helpers';
 import { transform } from '../../utils/transform';
-import { take } from '../filter/take';
 
 /**
- * Returns the first synchronous value of an Observable, if any,
- * `onEmpty` if none is produced, or `onError` if
- * the Observable errors synchronously.
- * When `onError` doesn't exist, `extract` will
- * synchronously throw.
+ * Returns the last synchronous value of an Observable.
+ * When an error is emitted, `extract` will synchronously throw.
  */
-export function extract<T, U = void, V = U>(
-  onEmpty?: U,
-  onError?: V
-): Push.Transformation<T, T | U | V> {
+export function extract<T, U>(
+  fallback: NullaryFn<U>
+): Push.Transformation<T, T | U> {
   return transform((observable) => {
-    let value: any;
-    let error: any;
+    let value: null | [T] = null;
 
-    const subscription = into(observable, take(1)).subscribe({
+    const subscription = observable.subscribe({
       next(val) {
         value = [val];
       },
       error(reason) {
-        error = [reason];
+        Util.throws(reason);
       }
     });
 
     subscription.unsubscribe();
 
-    if (error) {
-      if (onError) return onError;
-      else throw error[0];
-    }
-
-    return value ? value[0] : (onEmpty as U);
+    return value ? value[0] : fallback();
   });
 }
