@@ -1,5 +1,5 @@
 export * from './catches';
 export * from './mergeMap';
 export * from './switchMap';
-export * from './start';
+export * from './startWith';
 // TODO: implement concatMap, exhaustMap
