@@ -6,19 +6,6 @@ import { transform } from '../../utils/transform';
 import { intercept } from '../../utils/intercept';
 import { from } from '../../create/from';
 
-export interface CatchesOptions<T, U> {
-  /**
-   * Errors will only be catched once by default,
-   * but `selector` can be made to be called recursively
-   * by setting a higher than 1 limit.
-   */
-  limit?: number;
-  /**
-   * See `CatchesSelector`.
-   */
-  selector?: CatchesSelector<T, U>;
-}
-
 /**
  * Should return an observable for `catches`
  * to continue the stream with.
@@ -28,6 +15,14 @@ export type CatchesSelector<T, U> = (
   observable: Push.Observable<T>
 ) => Push.Convertible<U>;
 
+export interface CatchesOptions {
+  /**
+   * Errors will only be catched once by default,
+   * but `selector` can be made to be called recursively
+   * by setting a higher than 1 limit.
+   */
+  limit?: number;
+}
 /**
  * Catches an error in the original observable
  * and continues the stream by asynchronously subscribing
@@ -36,24 +31,21 @@ export type CatchesSelector<T, U> = (
  * will be resubscribed.
  */
 export function catches<T, U = T>(
-  selector?: CatchesSelector<T, U> | CatchesOptions<T, U>
+  selector: CatchesSelector<T, U> | null,
+  options?: CatchesOptions
 ): Push.Operation<T, T | U> {
-  const options = TypeGuard.isFunction(selector)
-    ? { selector }
-    : selector || {};
-
   const fn = (
     limit: number,
     err: Error,
     observable: Push.Observable
   ): Push.Convertible => {
-    const obs = options.selector
-      ? options.selector(err, observable)
-      : observable;
+    const obs = selector ? selector(err, observable) : observable;
     return trunk(limit, fn)(obs);
   };
 
-  const limit = TypeGuard.isNumber(options.limit) ? options.limit : 1;
+  const limit = TypeGuard.isNumber(options?.limit)
+    ? (options?.limit as number)
+    : 1;
   return trunk(limit < 0 ? Number.POSITIVE_INFINITY : limit, fn);
 }
 

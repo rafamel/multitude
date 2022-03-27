@@ -3,13 +3,12 @@ import { TypeGuard } from 'type-core';
 import { Push } from '@definitions';
 import { Observable } from '../classes/Observable';
 
-export type FromEventOptions =
+export type FromEventArgs =
   | { source: NodeJS.EventEmitter; type: string | symbol }
   | { source: EventTarget; type: string; capture?: boolean };
 
-export function fromEvent(options: FromEventOptions): Push.Observable {
-  const opts = { capture: false, ...options };
-  const { source, type, capture } = opts;
+export function fromEvent(args: FromEventArgs): Push.Observable {
+  const { source, type, capture } = { capture: false, ...args };
 
   if (TypeGuard.isEventTarget(source)) {
     return new Observable<Event>((obs) => {

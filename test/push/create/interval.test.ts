@@ -18,7 +18,7 @@ test(`succeeds w/ every`, async () => {
 });
 test(`succeeds w/ every, cancel (no cancellation)`, async () => {
   const controller = new AbortController();
-  const obs = interval({ every: 300, cancel: controller.signal });
+  const obs = interval(300, { cancel: controller.signal });
 
   const values: any[] = [];
   const subscription = obs.subscribe({
@@ -34,10 +34,7 @@ test(`succeeds w/ every, cancel (pre sync cancellation)`, async () => {
   const controller = new AbortController();
 
   controller.abort();
-  const obs = interval({
-    every: 300,
-    cancel: controller.signal
-  });
+  const obs = interval(300, { cancel: controller.signal });
 
   const values: any[] = [];
   const subscription = obs.subscribe({
@@ -52,10 +49,7 @@ test(`succeeds w/ every, cancel (pre sync cancellation)`, async () => {
 test(`succeeds w/ every, cancel (post sync cancellation)`, async () => {
   const controller = new AbortController();
 
-  const obs = interval({
-    every: 300,
-    cancel: controller.signal
-  });
+  const obs = interval(300, { cancel: controller.signal });
   controller.abort();
 
   const values: any[] = [];
@@ -72,10 +66,7 @@ test(`succeeds w/ every, cancel (async cancellation)`, async () => {
   const controller = new AbortController();
   setTimeout(() => controller.abort(), 1650);
 
-  const obs = interval({
-    every: 300,
-    cancel: controller.signal
-  });
+  const obs = interval(300, { cancel: controller.signal });
 
   const values: any[] = [];
   const subscription = obs.subscribe({

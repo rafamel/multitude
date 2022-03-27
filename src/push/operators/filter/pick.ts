@@ -1,14 +1,10 @@
-import { compare } from 'equal-strategies';
+import { Serial } from 'type-core';
 
 import { Push } from '@definitions';
 import { filter } from './filter';
 
-export type PickStrategy = 'strict' | 'shallow' | 'deep';
-
-export function pick<T, U>(
-  value: U,
-  strategy?: PickStrategy
+export function pick<T, U extends Serial.Primitive>(
+  value: U
 ): Push.Operation<T, Extract<T, U>> {
-  const fn = compare.bind(null, strategy || 'strict', value);
-  return filter(fn);
+  return filter((x: any) => x === value);
 }

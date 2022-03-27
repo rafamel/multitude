@@ -3,33 +3,24 @@ import { TypeGuard } from 'type-core';
 import { Push } from '@definitions';
 import { operate } from '../../utils/operate';
 
-export interface TakeOptions<T> {
-  count?: number;
-  while?: (value: T, index: number) => boolean;
-}
+export type TakeWhile<T> = (value: T, index: number) => boolean;
 
-export function take<T>(count: number | TakeOptions<T>): Push.Operation<T> {
-  const options = !count || TypeGuard.isNumber(count) ? { count } : count;
-
+export function take<T>(limit: number | TakeWhile<T>): Push.Operation<T> {
   return operate<T>((obs) => {
     let index = -1;
-    return {
-      next(value: T): void {
-        index++;
-
-        if (options.count && index < options.count) {
-          obs.next(value);
-          return !options.while && index + 1 >= options.count
-            ? obs.complete()
-            : undefined;
+    return TypeGuard.isNumber(limit)
+      ? {
+          next(value: T): void {
+            index++;
+            if (index < limit) obs.next(value);
+            return index + 1 >= limit ? obs.complete() : undefined;
+          }
         }
-
-        if (options.while && options.while(value, index)) {
-          return obs.next(value);
-        }
-
-        return obs.complete();
-      }
-    };
+      : {
+          next(value: T): void {
+            index++;
+            return limit(value, index) ? obs.next(value) : obs.complete();
+          }
+        };
   });
 }

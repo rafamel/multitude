@@ -3,7 +3,7 @@ import { Observable } from '../../classes/Observable';
 import { transform } from '../../utils/transform';
 import { teardown as _teardown } from '../../utils/teardown';
 
-export function finalize<T>(teardown?: Push.Teardown): Push.Operation<T> {
+export function finalize<T>(teardown: Push.Teardown | null): Push.Operation<T> {
   return transform((observable) => {
     if (!teardown) return observable;
 

@@ -1,27 +1,26 @@
-import { BinaryFn, TypeGuard } from 'type-core';
+import { TypeGuard } from 'type-core';
 import { compare as isEqual } from 'equal-strategies';
 
 import { Push } from '@definitions';
 import { operate } from '../../utils/operate';
 
-/** @ignore */
-const $empty = Symbol('empty');
-
+export type CompareComparator<T> = CompareStrategy | ComparePredicate<T>;
 export type CompareStrategy = 'strict' | 'shallow' | 'deep';
+export type ComparePredicate<T> = (a: T, b: T) => boolean;
 
 export function compare<T>(
-  strategy?: CompareStrategy | BinaryFn<[T, T], boolean>
+  comparator: CompareComparator<T>
 ): Push.Operation<T> {
-  const fn =
-    !strategy || TypeGuard.isString(strategy)
-      ? isEqual.bind(null, strategy || 'strict')
-      : strategy;
+  const fn = TypeGuard.isString(comparator)
+    ? isEqual.bind(null, comparator)
+    : comparator;
 
+  const empty = Symbol('empty');
   return operate<T>((obs) => {
-    let last: any = $empty;
+    let last: any = empty;
     return {
       next(value: T): void {
-        if (last === $empty || !fn(value, last)) {
+        if (last === empty || !fn(value, last)) {
           last = value;
           return obs.next(value);
         }

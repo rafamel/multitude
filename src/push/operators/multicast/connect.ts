@@ -14,12 +14,8 @@ export interface ConnectOptions {
 export function connect<T>(
   options?: ConnectOptions
 ): Push.Transformation<T, Push.Observable<T>> {
-  const opts = { replay: options?.replay || 0 };
-
   return transform((observable) => {
-    const res = share<T>({ policy: 'keep-open', replay: opts.replay })(
-      observable
-    );
+    const res = share<T>('keep-open', options)(observable);
     res.subscribe({ error: () => undefined });
     return res;
   });

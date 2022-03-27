@@ -6,7 +6,7 @@ import { push, from, compare } from '@push';
 test(`succeeds w/ strict strategy`, () => {
   const obj = {};
   const arr = [1, 1, 2, 1, {}, {}, obj, obj, obj, 'a', 'b', 'a'];
-  const obs = push(from(arr), compare());
+  const obs = push(from(arr), compare('strict'));
 
   const values: any[] = [];
   obs.subscribe((x) => values.push(x));

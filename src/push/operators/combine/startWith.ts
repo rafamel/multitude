@@ -6,16 +6,14 @@ import { transform } from '../../utils/transform';
 import { merge } from '../../create/merge';
 
 export interface StartWithOptions {
-  strategy?: 'always' | 'no-emit';
+  policy?: 'always' | 'no-emit';
 }
 
 export function startWith<T, U>(
   values: Iterable<U> | NullaryFn<Iterable<U>>,
   options?: StartWithOptions
 ): Push.Operation<T, T | U> {
-  const opts = {
-    strategy: options?.strategy || 'always'
-  };
+  const opts = { policy: options?.policy || 'always' };
 
   const next = TypeGuard.isIterable(values)
     ? (fn: UnaryFn<U>) => {
@@ -26,7 +24,7 @@ export function startWith<T, U>(
       };
 
   return transform((observable) => {
-    return opts.strategy === 'always'
+    return opts.policy === 'always'
       ? merge(
           new Observable((obs) => {
             next(obs.next.bind(obs));

@@ -16,7 +16,7 @@ test(`succeeds w/ default selector`, () => {
       obs.next(arr[3]);
       obs.next(arr[0]);
     }),
-    distinct()
+    distinct(null)
   );
 
   const values: any[] = [];

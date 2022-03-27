@@ -1,4 +1,4 @@
-import { BinaryFn, Empty, NullaryFn, UnaryFn } from 'type-core';
+import { Empty, NullaryFn, UnaryFn, BinaryFn } from 'type-core';
 import 'symbol-observable';
 
 export declare namespace Push {
@@ -26,7 +26,6 @@ export declare namespace Push {
     [Symbol.observable]: () => Observable<T>;
   };
 
-  // TODO: add generic error: E = unknown
   export interface Observable<T = any> extends Compatible<T>, Like<T> {
     subscribe(observer?: Observer<T>): Subscription;
     subscribe(

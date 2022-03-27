@@ -1,4 +1,4 @@
-import { Empty, NullaryFn, UnaryFn, TypeGuard } from 'type-core';
+import { NullaryFn, UnaryFn, TypeGuard } from 'type-core';
 import 'symbol-observable';
 
 import { Push } from '@definitions';
@@ -48,7 +48,7 @@ export class Observable<T = any> implements Push.Observable<T> {
   public [Symbol.observable](): Observable<T> {
     return this;
   }
-  public subscribe(observer?: Empty | Push.Observer<T>): Push.Subscription;
+  public subscribe(observer?: Push.Observer<T> | null): Push.Subscription;
   public subscribe(
     onNext: UnaryFn<T>,
     onError?: UnaryFn<Error>,

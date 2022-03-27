@@ -3,29 +3,7 @@ import { test } from '@jest/globals';
 
 import { Observable, push, trail } from '@push';
 
-test(`succeeds w/ default`, () => {
-  const obs = push(
-    new Observable<number>((obs) => {
-      obs.next(1);
-      obs.next(2);
-      obs.next(3);
-      obs.next(4);
-      obs.next(5);
-    }),
-    trail()
-  );
-
-  const values: any[] = [];
-  obs.subscribe((x) => values.push(x));
-
-  assert.deepStrictEqual(values, [
-    [1, 2],
-    [2, 3],
-    [3, 4],
-    [4, 5]
-  ]);
-});
-test(`succeeds w/ custom`, () => {
+test(`succeeds`, () => {
   const obs = push(
     new Observable<number>((obs) => {
       obs.next(1);

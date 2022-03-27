@@ -5,5 +5,3 @@ export * from './map';
 export * from './multicast';
 export * from './schedule';
 export * from './tap';
-
-// TODO: add subscribe, pipe

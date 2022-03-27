@@ -1,14 +1,10 @@
-import { compare } from 'equal-strategies';
+import { Serial } from 'type-core';
 
 import { Push } from '@definitions';
 import { filter } from './filter';
 
-export type OmitStrategy = 'strict' | 'shallow' | 'deep';
-
-export function omit<T, U>(
-  value: U,
-  strategy?: OmitStrategy
+export function omit<T, U extends Serial.Primitive>(
+  value: U
 ): Push.Operation<T, Exclude<T, U>> {
-  const fn = compare.bind(null, strategy || 'strict', value);
-  return filter((x) => !fn(x)) as Push.Operation<T, Exclude<T, U>>;
+  return filter((x: any) => x !== value);
 }

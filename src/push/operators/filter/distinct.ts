@@ -1,10 +1,10 @@
-import { BinaryFn } from 'type-core';
-
 import { Push } from '@definitions';
 import { operate } from '../../utils/operate';
 
+export type DistinctSelector<T> = (value: T, index: number) => any;
+
 export function distinct<T>(
-  selector?: BinaryFn<[T, number], any>
+  selector: DistinctSelector<T> | null
 ): Push.Operation<T> {
   return operate<T>((obs) => {
     let index = 0;

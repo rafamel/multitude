@@ -169,7 +169,7 @@ test(`succeeds (unsubscribe)`, async () => {
       setTimeout(() => obs.next(3), 100);
       setTimeout(() => obs.next(3), 200);
     }),
-    delay({ due: 100 })
+    delay(100)
   );
 
   const values: any[] = [];
@@ -193,7 +193,7 @@ test(`succeeds w/ signals (error, 1)`, async () => {
         obs.next(3);
       }, 100);
     }),
-    delay({ due: 100, signals: true })
+    delay(100, { signals: true })
   );
 
   const values: any[] = [];
@@ -219,7 +219,7 @@ test(`succeeds w/ signals (error, 2)`, async () => {
         obs.next(3);
       }, 100);
     }),
-    delay({ due: 100, signals: true })
+    delay(100, { signals: true })
   );
 
   const values: any[] = [];
@@ -244,7 +244,7 @@ test(`succeeds w/ signals (complete, 1)`, async () => {
         obs.next(3);
       }, 100);
     }),
-    delay({ due: 100, signals: true })
+    delay(100, { signals: true })
   );
 
   let complete = false;
@@ -272,7 +272,7 @@ test(`succeeds w/ signals (complete, 2)`, async () => {
         obs.next(3);
       }, 100);
     }),
-    delay({ due: 100, signals: true })
+    delay(100, { signals: true })
   );
 
   let complete = false;
@@ -306,8 +306,7 @@ test(`succeeds w/ condition`, async () => {
       setTimeout(() => obs.next(5), 600);
       setTimeout(() => obs.next(6), 700);
     }),
-    delay({
-      due: 100,
+    delay(100, {
       condition(x, i) {
         checks.push([x, i]);
         return doDelay;

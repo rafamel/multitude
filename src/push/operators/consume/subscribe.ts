@@ -1,10 +1,10 @@
-import { Empty, NullaryFn, UnaryFn } from 'type-core';
+import { NullaryFn, UnaryFn } from 'type-core';
 
 import { Push } from '@definitions';
 import { transform } from '../../utils/transform';
 
 export function subscribe<T>(
-  observer?: Empty | Push.Observer<T>
+  observer: Push.Observer<T> | null
 ): Push.Transformation<T, Push.Subscription>;
 export function subscribe<T>(
   onNext: UnaryFn<T>,

@@ -1,21 +1,20 @@
-import { NullaryFn, TypeGuard } from 'type-core';
+import { NullaryFn } from 'type-core';
 
 import { Push } from '@definitions';
 import { operate } from '../../utils/operate';
 
 export interface DelayOptions<T> {
-  /** Delay in millisecons */
-  due?: number;
   /** Whether to also delay error and completion signals */
   signals?: boolean;
   condition?: (value: T, index: number) => boolean;
 }
 
-export function delay<T>(due?: number | DelayOptions<T>): Push.Operation<T> {
-  const options = !due || TypeGuard.isNumber(due) ? { due } : due;
-  const condition = options.condition;
-  const signals = options.signals || false;
-  const ms = options.due || 0;
+export function delay<T>(
+  due: number,
+  options?: DelayOptions<T>
+): Push.Operation<T> {
+  const condition = options?.condition;
+  const signals = options?.signals || false;
 
   return operate<T>((obs) => {
     const pending: NullaryFn[] = [];
@@ -40,7 +39,7 @@ export function delay<T>(due?: number | DelayOptions<T>): Push.Operation<T> {
             item();
           }
         }
-      }, ms);
+      }, due);
       timeouts.add(timeout);
     }
 
