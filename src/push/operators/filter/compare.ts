@@ -1,5 +1,6 @@
 import { BinaryFn, TypeGuard } from 'type-core';
 import { compare as isEqual } from 'equal-strategies';
+
 import { Push } from '@definitions';
 import { operate } from '../../utils/operate';
 

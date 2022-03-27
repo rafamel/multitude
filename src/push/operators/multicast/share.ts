@@ -1,4 +1,5 @@
 import { shallow } from 'merge-strategies';
+
 import { Push } from '@definitions';
 import { transform } from '../../utils/transform';
 import { Observable } from '../../classes/Observable';

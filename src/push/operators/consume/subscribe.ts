@@ -1,4 +1,5 @@
 import { Empty, NullaryFn, UnaryFn } from 'type-core';
+
 import { Push } from '@definitions';
 import { transform } from '../../utils/transform';
 

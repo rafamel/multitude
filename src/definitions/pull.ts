@@ -45,6 +45,8 @@ export declare namespace Pull {
     next?: (value: I) => MaybePromise<Response<O>>;
     error?: (reason: Error) => MaybePromise<Response<O>>;
     complete?: () => MaybePromise<void>;
+    // TODO
+    // teardown?: () => MaybePromise<void>;
   }
 
   export interface PullableIterator<O, I> extends Iterator<O, I> {

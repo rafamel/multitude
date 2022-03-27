@@ -1,4 +1,5 @@
 import { compare } from 'equal-strategies';
+
 import { Push } from '@definitions';
 import { filter } from './filter';
 

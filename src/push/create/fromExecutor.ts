@@ -1,5 +1,6 @@
 import { NullaryFn } from 'type-core';
 import { SyncPromise } from 'promist';
+
 import { Push } from '@definitions';
 import { Observable } from '../classes/Observable';
 

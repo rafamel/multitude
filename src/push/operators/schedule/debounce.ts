@@ -1,4 +1,5 @@
 import { NullaryFn } from 'type-core';
+
 import { Push } from '@definitions';
 import { operate } from '../../utils/operate';
 

@@ -1,4 +1,5 @@
 import { TypeGuard } from 'type-core';
+
 import { Pull } from '@definitions';
 
 export class Validate {

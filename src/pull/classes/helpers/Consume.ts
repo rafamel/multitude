@@ -1,4 +1,5 @@
 import { SyncPromise } from 'promist';
+
 import { Pull } from '@definitions';
 
 export class Consume {

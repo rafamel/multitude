@@ -1,5 +1,6 @@
 import { NullaryFn, TypeGuard, UnaryFn } from 'type-core';
 import { shallow } from 'merge-strategies';
+
 import { Push } from '@definitions';
 import { Observable } from '../../classes/Observable';
 import { transform } from '../../utils/transform';

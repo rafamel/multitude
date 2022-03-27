@@ -1,4 +1,6 @@
 import { Empty, NullaryFn, UnaryFn, TypeGuard } from 'type-core';
+import 'symbol-observable';
+
 import { Push } from '@definitions';
 import {
   isObservableCompatible,
@@ -6,7 +8,6 @@ import {
 } from '../../utils/type-guards';
 import { From } from './helpers/From';
 import { Subscription } from './Subscription';
-import 'symbol-observable';
 
 export class Observable<T = any> implements Push.Observable<T> {
   public static of<T>(...items: T[]): Observable<T> {
