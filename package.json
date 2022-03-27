@@ -17,10 +17,32 @@
     "iterator",
     "operator"
   ],
-  "main": "pkg/dist",
-  "types": "pkg/dist",
+  "type": "module",
+  "types": "./build/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "definitions": [
+        "./build/definitions.d.ts"
+      ],
+      "push": [
+        "./build/push.d.ts"
+      ],
+      "pull": [
+        "./build/pull.d.ts"
+      ]
+    }
+  },
+  "exports": {
+    "default": "./build/index.js",
+    "definitions": "./build/definitions.js",
+    "push": "./build/push.js",
+    "pull": "./build/pull.js"
+  },
+  "files": [
+    "build/"
+  ],
   "engines": {
-    "node": ">=12"
+    "node": ">=16"
   },
   "scripts": {
     "node": "kpo node --",
@@ -30,13 +52,10 @@
     "fix": "kpo fix --",
     "lint": "kpo lint --",
     "test": "kpo test --",
-    "test:spec": "kpo test:spec --",
-    "test:suite": "kpo test:suite --",
     "commit": "kpo commit --",
     "release": "kpo release --",
     "distribute": "kpo distribute --",
     "validate": "kpo validate --",
-    "prepare": "kpo prepare --",
     "version": "kpo version --"
   },
   "homepage": "https://github.com/rafamel/multitude",
@@ -48,16 +67,15 @@
     "url": "https://github.com/rafamel/multitude/issues"
   },
   "devDependencies": {
-    "@babel/register": "^7.14.5",
     "@jest/globals": "^27.0.3",
-    "@riseup/library": "^0.13.1",
-    "babel-plugin-transform-es2015-modules-commonjs": "^6.26.2",
+    "@riseup/library": "^0.16.0",
+    "@riseup/tooling": "^0.16.0",
+    "@riseup/universal": "^0.16.0",
+    "@riseup/utils": "^0.16.0",
     "chalk": "^4.1.1",
-    "coveralls": "^3.1.1",
     "es-observable": "https://github.com/tc39/proposal-observable/tarball/d3404f06bc70c7c578a5047dfb3dc813730e3319",
-    "kpo": "^0.22.0",
-    "simple-git-hooks": "^2.5.1",
-    "typescript": "^4.3.4"
+    "kpo": "^0.23.2",
+    "typescript": "^4.6.2"
   },
   "dependencies": {
     "equal-strategies": "^0.1.0",
@@ -66,8 +84,5 @@
     "promist": "^5.1.0",
     "symbol-observable": "^3.0.0",
     "type-core": "^0.12.0"
-  },
-  "simple-git-hooks": {
-    "pre-commit": "kpo validate"
   }
 }
