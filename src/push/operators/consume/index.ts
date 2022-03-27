@@ -1,2 +1,2 @@
 export * from './extract';
-export * from './first';
+export * from './resolve';
