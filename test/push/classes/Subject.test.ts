@@ -1,4 +1,6 @@
+/* eslint-disable unicorn/error-message */
 import { beforeEach, describe, expect, jest, test } from '@jest/globals';
+
 import {
   Subject,
   Observable,
@@ -43,7 +45,7 @@ describe(`Subject-specific behavior`, () => {
       subject.next();
       subs1.unsubscribe();
       subject.next();
-      withError ? subject.error(Error()) : subject.complete();
+      withError ? subject.error(new Error()) : subject.complete();
       subject.next();
       subject.complete();
 
@@ -87,7 +89,7 @@ describe(`Subject-specific behavior`, () => {
       subject.subscribe({ error: () => undefined });
       subject.next('foo');
 
-      withError ? subject.error(Error()) : subject.complete();
+      withError ? subject.error(new Error()) : subject.complete();
       subject.next('bar');
       expect(subject.value).toBe('foo');
     }
@@ -112,7 +114,7 @@ describe(`Subject-specific behavior`, () => {
       configure({ onStoppedNotification: fn, onUnhandledError: null });
 
       const s1 = new Subject<void>();
-      withError ? s1.error(Error()) : s1.complete();
+      withError ? s1.error(new Error()) : s1.complete();
       expect(fn).toHaveBeenCalledTimes(0);
       s1.next();
       expect(fn).toHaveBeenCalledTimes(1);
@@ -120,7 +122,7 @@ describe(`Subject-specific behavior`, () => {
       const s2 = new Subject<void>();
       s2.subscribe({ error: () => undefined });
       s2.subscribe({ error: () => undefined });
-      withError ? s2.error(Error()) : s2.complete();
+      withError ? s2.error(new Error()) : s2.complete();
       expect(fn).toHaveBeenCalledTimes(1);
       s2.next();
       expect(fn).toHaveBeenCalledTimes(2);
@@ -132,7 +134,7 @@ describe(`Subject-specific behavior`, () => {
 
     const subject = new Subject<void>();
     subject.subscribe({ error: () => undefined });
-    subject.error(Error());
+    subject.error(new Error());
 
     expect(fn).toHaveBeenCalledTimes(0);
   });
@@ -144,10 +146,10 @@ describe(`Subject-specific behavior`, () => {
     const s2 = new Subject<void>();
     s2.subscribe({ error: () => undefined }).unsubscribe();
 
-    s1.error(Error());
+    s1.error(new Error());
     expect(fn).toHaveBeenCalledTimes(1);
 
-    s2.error(Error());
+    s2.error(new Error());
     expect(fn).toHaveBeenCalledTimes(2);
   });
   test(`Subject.error calls after termination propagate to onUnhandledError hook`, async () => {
@@ -157,7 +159,7 @@ describe(`Subject-specific behavior`, () => {
     const s1 = new Subject<void>();
     s1.complete();
     expect(fn).toHaveBeenCalledTimes(0);
-    s1.error(Error());
+    s1.error(new Error());
     expect(fn).toHaveBeenCalledTimes(1);
 
     const s2 = new Subject<void>();
@@ -165,7 +167,7 @@ describe(`Subject-specific behavior`, () => {
     s2.subscribe({ error: () => undefined });
     s2.complete();
     expect(fn).toHaveBeenCalledTimes(1);
-    s2.error(Error());
+    s2.error(new Error());
     expect(fn).toHaveBeenCalledTimes(2);
   });
   test(`Subject.constructor.of sets initial Subject.value`, () => {
@@ -215,7 +217,7 @@ describe(`Subject-specific behavior`, () => {
       assertObservableCalledTimes({ subscriber: 1, teardown: 0 });
       assertObserverCalledTimes({ start: 1, next: 3, error: 0, complete: 0 });
 
-      withError ? subject.error(Error()) : subject.complete();
+      withError ? subject.error(new Error()) : subject.complete();
       assertObservableCalledTimes({ subscriber: 1, teardown: 1 });
       assertObserverCalledTimes({
         start: 1,
@@ -276,7 +278,7 @@ describe(`Observable behavior`, () => {
     const errors: Error[] = [];
     configure({ onUnhandledError: (err) => errors.push(err) });
 
-    const error = Error('foo');
+    const error = new Error('foo');
 
     const { observable, subscriber } = Setup.from(new Subject());
     const { observer } = Setup.observer();
@@ -305,7 +307,7 @@ describe(`Observable behavior`, () => {
       ...observer,
       start: () => {
         observer.start();
-        throw Error();
+        throw new Error();
       }
     });
 
@@ -350,7 +352,7 @@ describe(`Observable behavior`, () => {
       ...observer,
       next: () => {
         observer.next();
-        throw Error();
+        throw new Error();
       }
     });
 
@@ -363,7 +365,7 @@ describe(`Observable behavior`, () => {
     const errors: Error[] = [];
     configure({ onUnhandledError: (err) => errors.push(err) });
 
-    const error = Error('foo');
+    const error = new Error('foo');
     const subject = new Subject<void>();
     const { observable, assertObservableCalledTimes } = Setup.from(subject);
     const { observer, assertObserverCalledTimes } = Setup.observer();
@@ -408,7 +410,7 @@ describe(`Observable behavior`, () => {
     const errors: Error[] = [];
     configure({ onUnhandledError: (err) => errors.push(err) });
 
-    const error = Error('foo');
+    const error = new Error('foo');
     const subject = new Subject<void>();
     const { observable, assertObservableCalledTimes } = Setup.from(subject);
     const { observer, assertObserverCalledTimes } = Setup.observer();
@@ -430,13 +432,13 @@ describe(`Observable behavior`, () => {
     const errors: Error[] = [];
     configure({ onUnhandledError: (err) => errors.push(err) });
 
-    const values = [Error('foo'), Error('bar'), Error('baz')];
+    const values = [new Error('foo'), new Error('bar'), new Error('baz')];
     const subject = new Subject<void>();
     const { observable, assertObservableCalledTimes } = Setup.from(subject);
     const { observer, assertObserverCalledTimes } = Setup.observer();
 
     const subscription = observable.subscribe(observer);
-    subject.error(Error());
+    subject.error(new Error());
     subject.error(values[0]);
     subject.error(values[1]);
     subject.error(values[2]);
@@ -450,7 +452,7 @@ describe(`Observable behavior`, () => {
     const errors: Error[] = [];
     configure({ onUnhandledError: (err) => errors.push(err) });
 
-    const error = Error('foo');
+    const error = new Error('foo');
     const subject = new Subject<void>();
     const { observable, assertObservableCalledTimes } = Setup.from(subject);
     const { observer, assertObserverCalledTimes } = Setup.observer();
@@ -475,7 +477,7 @@ describe(`Observable behavior`, () => {
     const { observer, assertObserverCalledTimes } = Setup.observer();
 
     const subscription = observable.subscribe(observer);
-    subject.error(Error());
+    subject.error(new Error());
 
     expect(errors).toHaveLength(0);
     expect(subscription.closed).toBe(true);
@@ -486,7 +488,7 @@ describe(`Observable behavior`, () => {
     const errors: Error[] = [];
     configure({ onUnhandledError: (err) => errors.push(err) });
 
-    const error = Error('foo');
+    const error = new Error('foo');
     const subject = new Subject<void>();
     const { observable, assertObservableCalledTimes } = Setup.from(subject);
     const { observer, assertObserverCalledTimes } = Setup.observer();

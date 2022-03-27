@@ -1,5 +1,6 @@
 import { test } from '@jest/globals';
 import { wait } from 'promist';
+
 import { connect } from '@push';
 import { Setup } from '../../../setup';
 

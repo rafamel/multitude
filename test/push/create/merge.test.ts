@@ -1,5 +1,6 @@
+import assert from 'node:assert';
 import { test } from '@jest/globals';
-import assert from 'assert';
+
 import { merge, Observable } from '@push';
 
 test(`throws for < 1 arguments`, () => {
@@ -17,7 +18,7 @@ test(`succeeds for 1 argument`, () => {
   merge(new Observable(() => undefined));
 });
 test(`succeeds, error early termination`, async () => {
-  const error = Error();
+  const error = new Error('foo');
 
   const a = new Observable((obs) => {
     obs.next(1);
@@ -113,7 +114,7 @@ test(`doesn't subscribe to next observables if destination is already closed`, (
   const a = new Observable((obs) => {
     obs.next(1);
     obs.next(2);
-    obs.error(Error());
+    obs.error(new Error('foo'));
   });
 
   let subscribed = false;

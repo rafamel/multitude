@@ -32,7 +32,7 @@ export function first<T>(
         complete() {
           if (emitted) return;
           if (strict) {
-            reject(Error(`Observable completed before emitting a value`));
+            reject(new Error(`Observable completed before emitting a value`));
           } else {
             resolve();
           }

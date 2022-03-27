@@ -1,12 +1,14 @@
 /* eslint-disable no-new */
 /* eslint-disable prefer-const */
-import assert from 'assert';
+/* eslint-disable unicorn/error-message */
+import assert from 'node:assert';
+import 'symbol-observable';
+
 import { Push } from '@definitions';
 import { Util } from '@helpers';
 import { isObservable } from '@push';
 import { runTests } from '../module/tests';
 import { Test, test } from './engine';
-import 'symbol-observable';
 
 export function tests(
   Observable: Push.ObservableConstructor,
@@ -170,7 +172,7 @@ export function tests(
     test('Observable.prototype.subscribe: passes Subscriber exceptions to Observer.error', () => {
       let pass = true;
       const times = [0, 0, 0, 0];
-      const err = Error('foo');
+      const err = new Error('foo');
 
       const subscription = new Observable(() => {
         throw err;
@@ -192,7 +194,7 @@ export function tests(
       let pass = true;
 
       const instance = new Observable(() => {
-        throw Error();
+        throw new Error();
       });
 
       let subscription: any;
@@ -209,7 +211,8 @@ export function tests(
       const times = [0, 0, 0, 0, 0];
       let subs: any;
 
-      const subscription = new Observable(() => () => times[4]++).subscribe({
+      const fn = (): number => times[4]++;
+      const subscription = new Observable(() => fn).subscribe({
         start(x) {
           subs = x;
           times[0]++;
@@ -229,10 +232,11 @@ export function tests(
 
       let subscription: any;
       try {
-        subscription = new Observable(() => () => times[4]++).subscribe({
+        const fn = (): number => times[4]++;
+        subscription = new Observable(() => fn).subscribe({
           start() {
             times[0]++;
-            throw Error();
+            throw new Error();
           },
           next: () => times[1]++,
           error: () => times[2]++,
@@ -254,10 +258,11 @@ export function tests(
 
       let subscription: any;
       try {
-        subscription = new Observable(() => () => times[4]++).subscribe({
+        const fn = (): number => times[4]++;
+        subscription = new Observable(() => fn).subscribe({
           get start(): any {
             times[0]++;
-            throw Error();
+            throw new Error();
           },
           next: () => times[1]++,
           error: () => times[2]++,
@@ -285,7 +290,7 @@ export function tests(
         get start() {
           times[1]++;
           return () => {
-            throw Error();
+            throw new Error();
           };
         }
       });
@@ -384,7 +389,7 @@ export function tests(
           start: () => times[0]++,
           next() {
             times[1]++;
-            throw Error();
+            throw new Error();
           },
           error: () => times[2]++,
           complete: () => times[3]++
@@ -416,7 +421,7 @@ export function tests(
         start: () => times[0]++,
         next() {
           times[1]++;
-          throw Error();
+          throw new Error();
         },
         error: () => times[2]++,
         complete: () => times[3]++
@@ -442,7 +447,7 @@ export function tests(
           start: () => times[0]++,
           get next(): any {
             times[1]++;
-            throw Error();
+            throw new Error();
           },
           error: () => times[2]++,
           complete: () => times[3]++
@@ -474,7 +479,7 @@ export function tests(
         start: () => times[0]++,
         get next(): any {
           times[1]++;
-          throw Error();
+          throw new Error();
         },
         error: () => times[2]++,
         complete: () => times[3]++
@@ -499,7 +504,7 @@ export function tests(
         get next() {
           times[1]++;
           return () => {
-            throw Error();
+            throw new Error();
           };
         }
       });
@@ -513,9 +518,9 @@ export function tests(
 
       const subscription = new Observable<void>((obs) => {
         if (!times[0] || times[2]) pass = false;
-        if (obs.error(Error('foo')) !== undefined) pass = false;
+        if (obs.error(new Error('foo')) !== undefined) pass = false;
         if (times[2] !== 1) pass = false;
-        if (obs.error(Error('bar')) !== undefined) pass = false;
+        if (obs.error(new Error('bar')) !== undefined) pass = false;
         obs.next();
         obs.complete();
         return () => times[4]++;
@@ -546,9 +551,9 @@ export function tests(
       const subscription = new Observable<void>((obs) => {
         Promise.resolve().then(() => {
           if (!times[0] || times[2]) pass = false;
-          if (obs.error(Error('foo')) !== undefined) pass = false;
+          if (obs.error(new Error('foo')) !== undefined) pass = false;
           if (times[2] !== 1) pass = false;
-          if (obs.error(Error('bar')) !== undefined) pass = false;
+          if (obs.error(new Error('bar')) !== undefined) pass = false;
           obs.next();
           obs.complete();
         });
@@ -580,14 +585,14 @@ export function tests(
 
       try {
         subscription = new Observable((obs) => {
-          obs.error(Error());
+          obs.error(new Error());
           return () => times[4]++;
         }).subscribe({
           start: () => times[0]++,
           next: () => times[1]++,
           error() {
             times[2]++;
-            throw Error();
+            throw new Error();
           },
           complete: () => times[3]++
         });
@@ -607,7 +612,7 @@ export function tests(
       subscription = new Observable((obs) => {
         Promise.resolve().then(() => {
           try {
-            obs.error(Error());
+            obs.error(new Error());
           } catch (_) {
             pass = false;
           }
@@ -618,7 +623,7 @@ export function tests(
         next: () => times[1]++,
         error() {
           times[2]++;
-          throw Error();
+          throw new Error();
         },
         complete: () => times[3]++
       });
@@ -635,14 +640,14 @@ export function tests(
 
       try {
         subscription = new Observable((obs) => {
-          obs.error(Error());
+          obs.error(new Error());
           return () => times[4]++;
         }).subscribe({
           start: () => times[0]++,
           next: () => times[1]++,
           get error(): any {
             times[2]++;
-            throw Error();
+            throw new Error();
           },
           complete: () => times[3]++
         });
@@ -662,7 +667,7 @@ export function tests(
       subscription = new Observable((obs) => {
         Promise.resolve().then(() => {
           try {
-            obs.error(Error());
+            obs.error(new Error());
           } catch (_) {
             pass = false;
           }
@@ -673,7 +678,7 @@ export function tests(
         next: () => times[1]++,
         get error(): any {
           times[2]++;
-          throw Error();
+          throw new Error();
         },
         complete: () => times[3]++
       });
@@ -685,17 +690,17 @@ export function tests(
     }),
     test(`Observer.prototype.error: is not obtained more than once per call`, () => {
       const times = [0, 0];
-      new Observable((obs) => obs.error(Error())).subscribe({
+      new Observable((obs) => obs.error(new Error())).subscribe({
         get error() {
           times[0]++;
           return () => undefined;
         }
       });
-      new Observable((obs) => obs.error(Error())).subscribe({
+      new Observable((obs) => obs.error(new Error())).subscribe({
         get error() {
           times[1]++;
           return () => {
-            throw Error();
+            throw new Error();
           };
         }
       });
@@ -710,7 +715,7 @@ export function tests(
       let subscription: any;
       new Observable((_) => {
         obs = _;
-        obs.error(Error('foo'));
+        obs.error(new Error('foo'));
         return () => times[4]++;
       }).subscribe({
         start(_) {
@@ -726,7 +731,7 @@ export function tests(
 
           times[2]++;
           obs.next();
-          obs.error(Error('bar'));
+          obs.error(new Error('bar'));
           obs.complete();
         },
         complete: () => times[3]++
@@ -743,7 +748,7 @@ export function tests(
       let obs: any;
       const subscription = new Observable((_) => {
         obs = _;
-        Promise.resolve().then(() => obs.error(Error('foo')));
+        Promise.resolve().then(() => obs.error(new Error('foo')));
         return () => times[4]++;
       }).subscribe({
         start: () => times[0]++,
@@ -756,7 +761,7 @@ export function tests(
 
           times[2]++;
           obs.next();
-          obs.error(Error('bar'));
+          obs.error(new Error('bar'));
           obs.complete();
         },
         complete: () => times[3]++
@@ -773,7 +778,7 @@ export function tests(
       let subscription: any;
       try {
         subscription = new Observable((obs) => {
-          obs.error(Error());
+          obs.error(new Error());
         }).subscribe();
       } catch (_) {
         pass = false;
@@ -788,7 +793,7 @@ export function tests(
       let subscription: any;
       try {
         subscription = new Observable((obs) => {
-          obs.error(Error());
+          obs.error(new Error());
         }).subscribe({
           error: () => undefined
         });
@@ -805,7 +810,7 @@ export function tests(
       let teardownCalledBefore = false;
 
       new Observable((obs) => {
-        obs.error(Error());
+        obs.error(new Error());
         return () => (teardownCalled = true);
       }).subscribe({
         error() {
@@ -823,7 +828,7 @@ export function tests(
       let teardownCalledBefore = false;
 
       new Observable((obs) => {
-        Promise.resolve().then(() => obs.error(Error()));
+        Promise.resolve().then(() => obs.error(new Error()));
         return () => (teardownCalled = true);
       }).subscribe({
         error() {
@@ -843,7 +848,7 @@ export function tests(
       let subscription: any;
       try {
         subscription = new Observable((obs) => {
-          obs.error(Error());
+          obs.error(new Error());
           return () => {
             teardownCalled = true;
             throw new Error();
@@ -866,7 +871,7 @@ export function tests(
         subscription = new Observable((obs) => {
           Promise.resolve().then(() => {
             try {
-              obs.error(Error());
+              obs.error(new Error());
             } catch (_) {
               pass = false;
             }
@@ -894,7 +899,7 @@ export function tests(
         if (obs.complete('foo') !== undefined) pass = false;
         if (times[3] !== 1) pass = false;
         if (obs.complete('bar') !== undefined) pass = false;
-        obs.error(Error());
+        obs.error(new Error());
         obs.complete();
         return () => times[4]++;
       }).subscribe({
@@ -922,7 +927,7 @@ export function tests(
           if (obs.complete('foo') !== undefined) pass = false;
           if (times[3] !== 1) pass = false;
           if (obs.complete('bar') !== undefined) pass = false;
-          obs.error(Error());
+          obs.error(new Error());
           obs.complete();
         });
         return () => times[4]++;
@@ -957,7 +962,7 @@ export function tests(
           error: () => times[2]++,
           complete() {
             times[3]++;
-            throw Error();
+            throw new Error();
           }
         });
       } catch (_) {
@@ -988,7 +993,7 @@ export function tests(
         error: () => times[2]++,
         complete() {
           times[3]++;
-          throw Error();
+          throw new Error();
         }
       });
 
@@ -1012,7 +1017,7 @@ export function tests(
           error: () => times[2]++,
           get complete(): any {
             times[3]++;
-            throw Error();
+            throw new Error();
           }
         });
       } catch (_) {
@@ -1043,7 +1048,7 @@ export function tests(
         error: () => times[2]++,
         get complete(): any {
           times[3]++;
-          throw Error();
+          throw new Error();
         }
       });
 
@@ -1064,7 +1069,7 @@ export function tests(
         get complete() {
           times[1]++;
           return () => {
-            throw Error();
+            throw new Error();
           };
         }
       });
@@ -1097,7 +1102,7 @@ export function tests(
           times[3]++;
           obs.next();
           obs.complete();
-          obs.error(Error('bar'));
+          obs.error(new Error('bar'));
         }
       });
 
@@ -1127,7 +1132,7 @@ export function tests(
           times[3]++;
           obs.next();
           obs.complete();
-          obs.error(Error('bar'));
+          obs.error(new Error('bar'));
         }
       });
 
@@ -1289,7 +1294,7 @@ export function tests(
         subscription = new Observable(() => {
           return () => {
             teardownCalled = true;
-            throw Error();
+            throw new Error();
           };
         }).subscribe();
         subscription.unsubscribe();
@@ -1310,7 +1315,7 @@ export function tests(
         subscription = new Observable(() => {
           return () => {
             teardownCalled = true;
-            throw Error();
+            throw new Error();
           };
         }).subscribe();
         await Promise.resolve();

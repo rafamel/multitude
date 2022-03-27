@@ -38,7 +38,7 @@ export function catches<T, U = T>(
   selector?: CatchesSelector<T, U> | CatchesOptions<T, U>
 ): Push.Operation<T, T | U> {
   const options = TypeGuard.isFunction(selector)
-    ? { selector: selector }
+    ? { selector }
     : selector || {};
 
   const fn = (
@@ -53,7 +53,7 @@ export function catches<T, U = T>(
   };
 
   const limit = TypeGuard.isNumber(options.limit) ? options.limit : 1;
-  return trunk(limit < 0 ? Infinity : limit, fn);
+  return trunk(limit < 0 ? Number.POSITIVE_INFINITY : limit, fn);
 }
 
 function trunk<T, U = T>(

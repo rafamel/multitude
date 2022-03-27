@@ -1,7 +1,8 @@
+import assert from 'node:assert';
 import { test } from '@jest/globals';
-import assert from 'assert';
-import { Observable, distinct } from '@push';
 import { into } from 'pipettes';
+
+import { Observable, distinct } from '@push';
 
 test(`succeeds w/ default selector`, () => {
   const arr = [1, {}, 'b', {}];

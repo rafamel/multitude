@@ -1,10 +1,11 @@
+import assert from 'node:assert';
 import { test } from '@jest/globals';
-import assert from 'assert';
-import { delay, Observable } from '@push';
 import { into } from 'pipettes';
 
+import { delay, Observable } from '@push';
+
 test(`succeeds (error, 1)`, async () => {
-  const error = Error('foo');
+  const error = new Error('foo');
   const obs = into(
     new Observable<any>((obs) => {
       obs.next(1);
@@ -30,7 +31,7 @@ test(`succeeds (error, 1)`, async () => {
   assert.deepStrictEqual(values, [1, 2, error]);
 });
 test(`succeeds (error, 2)`, async () => {
-  const error = Error('foo');
+  const error = new Error('foo');
   const obs = into(
     new Observable<any>((obs) => {
       obs.next(1);
@@ -54,7 +55,7 @@ test(`succeeds (error, 2)`, async () => {
   assert.deepStrictEqual(values, [1, 2, error]);
 });
 test(`succeeds (error, 3)`, async () => {
-  const error = Error('foo');
+  const error = new Error('foo');
   const obs = into(
     new Observable<any>((obs) => {
       obs.next(1);
@@ -183,7 +184,7 @@ test(`succeeds (unsubscribe)`, async () => {
   assert.deepStrictEqual(values, [1, 2]);
 });
 test(`succeeds w/ signals (error, 1)`, async () => {
-  const error = Error('foo');
+  const error = new Error('foo');
   const obs = into(
     new Observable<any>((obs) => {
       obs.next(1);
@@ -209,7 +210,7 @@ test(`succeeds w/ signals (error, 1)`, async () => {
   assert.deepStrictEqual(values, [1, 2, error]);
 });
 test(`succeeds w/ signals (error, 2)`, async () => {
-  const error = Error('foo');
+  const error = new Error('foo');
   const obs = into(
     new Observable<any>((obs) => {
       obs.next(1);

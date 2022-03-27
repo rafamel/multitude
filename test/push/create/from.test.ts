@@ -1,7 +1,8 @@
+import assert from 'node:assert';
 import { test } from '@jest/globals';
-import assert from 'assert';
-import { from, Observable, Subject } from '@push';
 import 'symbol-observable';
+
+import { from, Observable, Subject } from '@push';
 
 test(`succeeds w/ Observable`, () => {
   const observable = new Observable(() => undefined);

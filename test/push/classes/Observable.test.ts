@@ -1,4 +1,6 @@
+/* eslint-disable unicorn/error-message */
 import { beforeEach, expect, test } from '@jest/globals';
+
 import {
   Observable,
   isObservableCompatible,
@@ -9,6 +11,7 @@ import {
 import { Util } from '@helpers';
 import { Setup } from '../../setup';
 
+const noop = (): void => undefined;
 beforeEach(() => configure(null));
 
 test(`is ObservableLike`, () => {
@@ -62,7 +65,8 @@ test(`Subscription.unsubscribe: errors when subscriber fails`, () => {
   const errors: Error[] = [];
   configure({ onUnhandledError: (err) => errors.push(err) });
 
-  new Observable(() => () => Util.throws(Error())).subscribe().unsubscribe();
+  const fn = (): never => Util.throws(new Error());
+  new Observable(() => fn).subscribe().unsubscribe();
 
   expect(errors).toHaveLength(1);
 });
@@ -70,7 +74,7 @@ test(`Subscription.unsubscribe: doesn't error when subscriber succeeds`, () => {
   const errors: Error[] = [];
   configure({ onUnhandledError: (err) => errors.push(err) });
 
-  new Observable(() => () => undefined).subscribe().unsubscribe();
+  new Observable(() => noop).subscribe().unsubscribe();
 
   expect(errors).toHaveLength(0);
 });
@@ -78,7 +82,7 @@ test(`Observer.start: errors when it fails`, () => {
   const errors: Error[] = [];
   configure({ onUnhandledError: (err) => errors.push(err) });
 
-  const error = Error('foo');
+  const error = new Error('foo');
 
   const { observable, subscriber } = Setup.from(null);
   const { observer } = Setup.observer();
@@ -107,7 +111,7 @@ test(`Observer.start: hooks properly unsubscribe on error`, () => {
     ...observer,
     start: () => {
       observer.start();
-      throw Error();
+      throw new Error();
     }
   });
 
@@ -152,7 +156,7 @@ test(`Observer.next: hooks properly unsubscribe on error (sync)`, () => {
     ...observer,
     next: () => {
       observer.next();
-      throw Error();
+      throw new Error();
     }
   });
 
@@ -176,7 +180,7 @@ test(`Observer.next: hooks properly unsubscribe on error (async)`, async () => {
     ...observer,
     next: () => {
       observer.next();
-      throw Error();
+      throw new Error();
     }
   });
 
@@ -192,7 +196,7 @@ test(`Observer.next: errors when it fails (sync)`, () => {
   const errors: Error[] = [];
   configure({ onUnhandledError: (err) => errors.push(err) });
 
-  const error = Error('foo');
+  const error = new Error('foo');
   const { observable, assertObservableCalledTimes } = Setup.from<void>(
     new Observable((obs) => obs.next())
   );
@@ -226,7 +230,7 @@ test(`Observer.next: errors when it fails (async)`, async () => {
     ...observer,
     next: () => {
       observer.next();
-      throw Error();
+      throw new Error();
     }
   });
 
@@ -288,7 +292,7 @@ test(`Observer.error: errors when it fails (sync)`, () => {
   const errors: Error[] = [];
   configure({ onUnhandledError: (err) => errors.push(err) });
 
-  const error = Error('foo');
+  const error = new Error('foo');
   const { observable, assertObservableCalledTimes } = Setup.from<void>(
     new Observable((obs) => obs.error(error))
   );
@@ -310,10 +314,10 @@ test(`Observer.error: errors when it fails (async)`, async () => {
   const errors: Error[] = [];
   configure({ onUnhandledError: (err) => errors.push(err) });
 
-  const error = Error('foo');
+  const error = new Error('foo');
   const { observable, assertObservableCalledTimes } = Setup.from<void>(
     new Observable((obs) => {
-      Promise.resolve().then(() => obs.error(Error()));
+      Promise.resolve().then(() => obs.error(new Error()));
       return () => Util.throws(new Error());
     })
   );
@@ -337,10 +341,10 @@ test(`Observer.error: errors after it's closed (sync)`, () => {
   const errors: Error[] = [];
   configure({ onUnhandledError: (err) => errors.push(err) });
 
-  const values = [Error('foo'), Error('bar'), Error('baz')];
+  const values = [new Error('foo'), new Error('bar'), new Error('baz')];
   const { observable, assertObservableCalledTimes } = Setup.from<void>(
     new Observable((obs) => {
-      obs.error(Error());
+      obs.error(new Error());
       obs.error(values[0]);
       obs.error(values[1]);
       obs.error(values[2]);
@@ -359,10 +363,10 @@ test(`Observer.error: errors after it's closed (async)`, async () => {
   const errors: Error[] = [];
   configure({ onUnhandledError: (err) => errors.push(err) });
 
-  const values = [Error('foo'), Error('bar'), Error('baz')];
+  const values = [new Error('foo'), new Error('bar'), new Error('baz')];
   const { observable, assertObservableCalledTimes } = Setup.from<void>(
     new Observable((obs) => {
-      obs.error(Error());
+      obs.error(new Error());
       Promise.resolve().then(() => {
         obs.error(values[0]);
         obs.error(values[1]);
@@ -384,7 +388,7 @@ test(`Observer.error: errors when there's no listener (sync)`, () => {
   const errors: Error[] = [];
   configure({ onUnhandledError: (err) => errors.push(err) });
 
-  const error = Error('foo');
+  const error = new Error('foo');
   const { observable, assertObservableCalledTimes } = Setup.from<void>(
     new Observable((obs) => obs.error(error))
   );
@@ -404,7 +408,7 @@ test(`Observer.error: errors when there's no listener (async)`, async () => {
   const errors: Error[] = [];
   configure({ onUnhandledError: (err) => errors.push(err) });
 
-  const error = Error('foo');
+  const error = new Error('foo');
   const { observable, assertObservableCalledTimes } = Setup.from<void>(
     new Observable((obs) => {
       Promise.resolve().then(() => obs.error(error));
@@ -428,7 +432,7 @@ test(`Observer.error: doesn't error when it succeeds and there's a listener (syn
   configure({ onUnhandledError: (err) => errors.push(err) });
 
   const { observable, assertObservableCalledTimes } = Setup.from<void>(
-    new Observable((obs) => obs.error(Error()))
+    new Observable((obs) => obs.error(new Error()))
   );
   const { observer, assertObserverCalledTimes } = Setup.observer();
 
@@ -445,7 +449,7 @@ test(`Observer.error: doesn't error when it succeeds and there's a listener (asy
 
   const { observable, assertObservableCalledTimes } = Setup.from<void>(
     new Observable((obs) => {
-      Promise.resolve().then(() => obs.error(Error()));
+      Promise.resolve().then(() => obs.error(new Error()));
     })
   );
   const { observer, assertObserverCalledTimes } = Setup.observer();
@@ -462,7 +466,7 @@ test(`Observer.error: catches Subscriber error`, () => {
   const errors: Error[] = [];
   configure({ onUnhandledError: (err) => errors.push(err) });
 
-  const error = Error('foo');
+  const error = new Error('foo');
   const { observable, assertObservableCalledTimes } = Setup.from<void>(
     new Observable(() => Util.throws(error))
   );
@@ -480,7 +484,7 @@ test(`Observer.error: catches Subscriber error and errors on failure`, () => {
   const errors: Error[] = [];
   configure({ onUnhandledError: (err) => errors.push(err) });
 
-  const error = Error('foo');
+  const error = new Error('foo');
   const { observable, assertObservableCalledTimes } = Setup.from<void>(
     new Observable(() => Util.throws(error))
   );
@@ -503,7 +507,7 @@ test(`Observer.error: catches Subscriber errors and errors when lacking listener
   const errors: Error[] = [];
   configure({ onUnhandledError: (err) => errors.push(err) });
 
-  const error = Error('foo');
+  const error = new Error('foo');
   const { observable, assertObservableCalledTimes } = Setup.from<void>(
     new Observable(() => Util.throws(error))
   );
@@ -523,7 +527,7 @@ test(`Observer.complete: rejects when it fails (sync)`, () => {
   const errors: Error[] = [];
   configure({ onUnhandledError: (err) => errors.push(err) });
 
-  const error = Error('foo');
+  const error = new Error('foo');
   const { observable, assertObservableCalledTimes } = Setup.from<void>(
     new Observable((obs) => obs.complete())
   );
@@ -546,7 +550,7 @@ test(`Observer.complete: errors when it fails (async)`, async () => {
   const errors: Error[] = [];
   configure({ onUnhandledError: (err) => errors.push(err) });
 
-  const error = Error('foo');
+  const error = new Error('foo');
   const { observable, assertObservableCalledTimes } = Setup.from<void>(
     new Observable((obs) => {
       Promise.resolve().then(() => obs.complete());

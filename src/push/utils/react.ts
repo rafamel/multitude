@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import { NullaryFn, TypeGuard, UnaryFn } from 'type-core';
 import { Push } from '@definitions';
 import { from } from '../create/from';
@@ -56,7 +57,7 @@ export function useObservable<T, U = ObservableHookResult<T> | null>(
             : {
                 success: false,
                 done: true,
-                data: Error(`Observable completed before pushing any value`)
+                data: new Error(`Observable completed before pushing any value`)
               }
         );
       }
@@ -76,34 +77,3 @@ export function useObservable<T, U = ObservableHookResult<T> | null>(
 
   return store.response as U;
 }
-
-// TODO
-// export function usePropsMulticast<P, R = P>(
-//   React: ReactHooksDependency,
-//   props: P,
-//   projection?: UnaryFn<P, R>
-// ): Push.Multicast<R> {
-//   const store = React.useMemo(() => {
-//     let observer: any;
-
-//     const multicast = new Multicast(
-//       (obs) => {
-//         observer = obs;
-//       },
-//       { replay: true },
-//       { onCreate: (connect) => connect() }
-//     );
-
-//     observer.next(projection ? projection(props) : props);
-
-//     return { props, observer, multicast };
-//   }, []);
-
-//   if (props !== store.props) {
-//     store.props = props;
-//     const value = projection ? projection(props) : props;
-//     if (value !== store.multicast.value) store.observer.next(value);
-//   }
-
-//   return store.multicast;
-// }

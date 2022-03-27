@@ -1,5 +1,6 @@
 /* eslint-disable  @typescript-eslint/explicit-function-return-type */
 import { expect, jest } from '@jest/globals';
+
 import { Observable } from '@push';
 
 export class Setup {
@@ -60,7 +61,7 @@ export class Setup {
         ];
 
         return () => {
-          timeouts.forEach((timeout) => clearTimeout(timeout));
+          for (const timeout of timeouts) clearTimeout(timeout);
         };
       })
     );

@@ -1,7 +1,8 @@
+import assert from 'node:assert';
 import { test } from '@jest/globals';
-import assert from 'assert';
-import { Observable, Subscription, tap } from '@push';
 import { into } from 'pipettes';
+
+import { Observable, Subscription, tap } from '@push';
 
 test(`Observer.start`, () => {
   let pass = false;
@@ -54,7 +55,7 @@ test(`Observer.error`, () => {
   const times = [0, 0];
   const values: [Error[], Error[]] = [[], []];
 
-  const error = Error('foo');
+  const error = new Error('foo');
   const obs = into(
     new Observable<number>((obs) => {
       obs.error(error);

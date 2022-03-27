@@ -1,7 +1,8 @@
+import assert from 'node:assert';
 import { test } from '@jest/globals';
-import assert from 'assert';
-import { catches, Observable } from '@push';
 import { into } from 'pipettes';
+
+import { catches, Observable } from '@push';
 
 test(`non error flow succeeds`, async () => {
   let catchesCalled = false;
@@ -37,7 +38,7 @@ test(`non error flow succeeds`, async () => {
   assert.deepStrictEqual(times, [1, 2, 0, 1]);
 });
 test(`error flow succeeds, error finalization`, async () => {
-  const errors = [Error('foo'), Error('bar')];
+  const errors = [new Error('foo'), new Error('bar')];
 
   const args: any[] = [];
   const teardownCalled = [false, false];
@@ -99,7 +100,7 @@ test(`error flow succeeds, unsubscribe finalization`, async () => {
     new Observable<number>((obs) => {
       obs.next(1);
       obs.next(2);
-      obs.error(Error());
+      obs.error(new Error('foo'));
       return () => {
         teardownCalled[0] = true;
       };

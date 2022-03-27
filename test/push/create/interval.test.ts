@@ -1,5 +1,6 @@
+import assert from 'node:assert';
 import { test } from '@jest/globals';
-import assert from 'assert';
+
 import { interval } from '@push';
 import { Util } from '@helpers';
 
@@ -52,7 +53,10 @@ test(`succeeds w/ every, cancel (callback success)`, async () => {
   assert.deepStrictEqual(values, [0, 1, 2, 3, 4]);
 });
 test(`succeeds w/ every, cancel (callback failure)`, async () => {
-  const obs = interval({ every: 300, cancel: () => Util.throws(Error()) });
+  const obs = interval({
+    every: 300,
+    cancel: () => Util.throws(new Error('foo'))
+  });
 
   let errorCalled = false;
   const values: any[] = [];
@@ -91,7 +95,7 @@ test(`succeeds w/ every, cancel (Promise rejection)`, async () => {
     every: 300,
     // eslint-disable-next-line promise/param-names
     cancel: new Promise((_, reject) => {
-      setTimeout(() => reject(Error()), 1650);
+      setTimeout(() => reject(new Error('foo')), 1650);
     })
   });
 

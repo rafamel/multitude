@@ -1,7 +1,8 @@
+import assert from 'node:assert';
 import { test } from '@jest/globals';
-import assert from 'assert';
-import { mergeMap, Observable } from '@push';
 import { into } from 'pipettes';
+
+import { mergeMap, Observable } from '@push';
 
 test(`succeeds: inner error (sync)`, () => {
   const times = [0, 0, 0, 0, 0, 0];
@@ -16,7 +17,7 @@ test(`succeeds: inner error (sync)`, () => {
         times[0]++;
         obs.next(value);
         obs.next(value + 1);
-        obs.error(Error(String(value)));
+        obs.error(new Error(String(value)));
         return () => times[1]++;
       });
     })
@@ -59,7 +60,7 @@ test(`succeeds: inner error (async)`, async () => {
         obs.next(value);
         Promise.resolve().then(() => {
           obs.next(value + 1);
-          if (!error) obs.error(Error(String(value)));
+          if (!error) obs.error(new Error(String(value)));
         });
         return () => times[1]++;
       });
@@ -93,7 +94,7 @@ test(`succeeds: outer error (sync)`, () => {
     new Observable<number>((obs) => {
       obs.next(10);
       obs.next(20);
-      obs.error(Error('foo'));
+      obs.error(new Error('foo'));
     }),
     mergeMap((value: number) => {
       return new Observable<number>((obs) => {
@@ -132,7 +133,7 @@ test(`succeeds: outer error (async)`, async () => {
     new Observable<number>((obs) => {
       obs.next(10);
       obs.next(20);
-      obs.error(Error('foo'));
+      obs.error(new Error('foo'));
     }),
     mergeMap((value: number) => {
       return new Observable<number>((obs) => {

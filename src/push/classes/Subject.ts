@@ -85,17 +85,17 @@ export class Subject<T = any, U extends T | void = T | void>
       },
       next: (value) => {
         this.#value = value;
-        observers.forEach((obs) => obs.next(value));
+        for (const obs of observers) obs.next(value);
       },
       error: (error) => {
         if (!observers.size) {
           Globals.onUnhandledError(error, this.#subscription);
         } else {
-          observers.forEach((obs) => obs.error(error));
+          for (const obs of observers) obs.error(error);
         }
       },
       complete: () => {
-        observers.forEach((obs) => obs.complete());
+        for (const obs of observers) obs.complete();
       }
     });
   }

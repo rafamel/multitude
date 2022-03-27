@@ -1,5 +1,6 @@
+import assert from 'node:assert';
 import { test } from '@jest/globals';
-import assert from 'assert';
+
 import { Observable, fromPromise } from '@push';
 
 test(`succeeds w/ Promise resolution`, async () => {
@@ -13,7 +14,7 @@ test(`succeeds w/ Promise resolution`, async () => {
   assert.deepStrictEqual(values, [1]);
 });
 test(`succeeds w/ Promise rejection`, async () => {
-  const error = Error('foo');
+  const error = new Error('foo');
   const observable = fromPromise(Promise.reject(error));
 
   assert(observable instanceof Observable);

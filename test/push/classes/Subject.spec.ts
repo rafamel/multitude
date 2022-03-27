@@ -1,4 +1,5 @@
 import { expect, test } from '@jest/globals';
+
 import { Push } from '@definitions';
 import { Subject, configure, Observable } from '@push';
 import { compliance } from '../../es-observable/compliance';

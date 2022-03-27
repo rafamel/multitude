@@ -1,7 +1,8 @@
 import { test, expect } from '@jest/globals';
+import 'symbol-observable';
+
 import { Util } from '@helpers';
 import { isObservableLike, isObservableCompatible } from '@push';
-import 'symbol-observable';
 
 test(`isObservableLike`, () => {
   expect(isObservableLike(undefined)).toBe(false);

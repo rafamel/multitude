@@ -1,7 +1,8 @@
+import assert from 'node:assert';
 import { test } from '@jest/globals';
-import assert from 'assert';
-import { Observable, filter } from '@push';
 import { into } from 'pipettes';
+
+import { Observable, filter } from '@push';
 
 test(`succeeds`, () => {
   const obs = into(

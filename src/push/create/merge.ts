@@ -48,10 +48,10 @@ export function merge<T>(
 ): Push.Observable<T>;
 export function merge(...arr: any): Push.Observable {
   if (arr.length < 1) {
-    throw Error(`Must provide at least one observable to merge`);
+    throw new Error(`Must provide at least one observable to merge`);
   }
 
-  const observables: Push.Observable[] = arr.map(from);
+  const observables: Push.Observable[] = arr.map((x: any) => from(x));
   if (observables.length === 1) return observables[0];
 
   return new Observable((obs) => {

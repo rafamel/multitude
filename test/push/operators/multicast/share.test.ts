@@ -1,5 +1,6 @@
 import { test, expect, describe } from '@jest/globals';
 import { wait } from 'promist';
+
 import { share, SharePolicy } from '@push';
 import { Setup } from '../../../setup';
 

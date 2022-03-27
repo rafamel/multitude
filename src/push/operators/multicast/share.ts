@@ -42,7 +42,7 @@ export function share<T>(
       }
 
       observers.add(obs);
-      values.forEach((value) => obs.next(value));
+      for (const value of values) obs.next(value);
 
       if (!subscription) {
         observable.subscribe({
@@ -54,15 +54,15 @@ export function share<T>(
               values.push(value);
               if (opts.replay < values.length) values.shift();
             }
-            observers.forEach((obs) => obs.next(value));
+            for (const obs of observers) obs.next(value);
           },
           error(err) {
             termination = { error: err, complete: false };
-            observers.forEach((obs) => obs.error(err));
+            for (const obs of observers) obs.error(err);
           },
           complete() {
             termination = { error: null, complete: true };
-            observers.forEach((obs) => obs.complete());
+            for (const obs of observers) obs.complete();
           }
         });
       }

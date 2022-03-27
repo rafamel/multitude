@@ -84,10 +84,7 @@ export function combine(observables: any): Push.Observable {
   return into(
     combineList(list),
     map((current: any[]) => {
-      return current.reduce((acc, value, i) => {
-        acc[dict[i]] = value;
-        return acc;
-      }, {});
+      return Object.fromEntries(current.map((value, i) => [dict[i], value]));
     })
   );
 }
@@ -95,10 +92,10 @@ export function combine(observables: any): Push.Observable {
 /** @ignore */
 function combineList(arr?: Push.Convertible[]): Push.Observable<any[]> {
   if (!arr || arr.length < 1) {
-    throw Error(`Must provide at least one observable to combine`);
+    throw new Error(`Must provide at least one observable to combine`);
   }
 
-  const observables: Push.Observable[] = arr.map(from);
+  const observables: Push.Observable[] = arr.map((x) => from(x));
   if (observables.length === 1) {
     return into(
       observables[0],
@@ -115,11 +112,9 @@ function combineList(arr?: Push.Convertible[]): Push.Observable<any[]> {
 
   return new Observable((obs) => {
     const pending = new Set<number>(
-      Array(observables.length)
-        .fill(0)
-        .map((_, i) => i)
+      Array.from({ length: observables.length }).map((_, i) => i)
     );
-    const current = Array(observables.length).fill(0);
+    const current = Array.from({ length: observables.length }).fill(0);
     return intercept(merge(...sources), {
       to: obs,
       between: {

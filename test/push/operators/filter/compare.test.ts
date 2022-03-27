@@ -1,7 +1,8 @@
+import assert from 'node:assert';
 import { test } from '@jest/globals';
-import assert from 'assert';
-import { compare, from } from '@push';
 import { into } from 'pipettes';
+
+import { compare, from } from '@push';
 
 test(`succeeds w/ strict strategy`, () => {
   const obj = {};

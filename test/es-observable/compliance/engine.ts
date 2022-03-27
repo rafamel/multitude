@@ -1,11 +1,15 @@
 /* eslint-disable no-console */
-import util from 'util';
+import util from 'node:util';
 import chalk from 'chalk';
 
 export type Test = null | [string, () => void | Promise<void>];
 export type Result = [string, Error[]];
 export type Response = { result: Result; results: Result[] };
 export type Logging = 'silent' | 'final' | 'each' | 'verbose' | 'raw';
+
+function log(...args: any): void {
+  process.stdout.write(util.format(...args) + '\n');
+}
 
 export function test(name: string, fn: () => void | Promise<void>): Test {
   return [name, fn];
@@ -17,10 +21,6 @@ export async function engine(
   logging: Logging
 ): Promise<Response> {
   const results: Result[] = [];
-
-  const log = (...args: any): void => {
-    process.stdout.write(util.format(...args) + '\n');
-  };
 
   const consoleLog = console.log;
   const verbose: any[] = [];
@@ -57,7 +57,7 @@ export async function engine(
       if (result[1].length) {
         log(chalk.red('  ✕ ') + result[0]);
         const err = result[1][0];
-        if (err && err.message && err.message.substr(-8) !== ' == true') {
+        if (err && err.message && err.message.slice(-8) !== ' == true') {
           const str =
             '     ' +
             chalk.red('Error: ') +
