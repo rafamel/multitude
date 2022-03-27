@@ -1,5 +1,4 @@
 import { UnaryFn } from 'type-core';
-import { shallow } from 'merge-strategies';
 
 import { Push } from '@definitions';
 import { Util } from '@helpers';
@@ -26,15 +25,14 @@ export class Talkback<T = any> implements Push.Talkback<T> {
     options?: Talkback.Options
   ) {
     this.#items = items;
-    this.#options = shallow(
-      {
-        stopAtFirst: false,
-        onError: (err: Error) => {
+    this.#options = {
+      stopAtFirst: options?.stopAtFirst || false,
+      onError:
+        options?.onError ||
+        ((err: Error) => {
           setTimeout(() => Util.throws(err), 0);
-        }
-      },
-      options || undefined
-    );
+        })
+    };
   }
   /**
    * Emits a start signal with a Subscription.

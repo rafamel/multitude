@@ -1,5 +1,3 @@
-import { shallow } from 'merge-strategies';
-
 import { Push } from '@definitions';
 import { transform } from '../../utils/transform';
 import { Observable } from '../../classes/Observable';
@@ -24,10 +22,10 @@ export type SharePolicy = 'on-demand' | 'keep-open' | 'keep-closed';
 export function share<T>(
   options?: ShareOptions
 ): Push.Transformation<T, Push.Observable<T>> {
-  const opts = shallow(
-    { policy: 'on-demand', replay: 0 },
-    options || undefined
-  );
+  const opts = {
+    policy: options?.policy || 'on-demand',
+    replay: options?.replay || 0
+  };
 
   return transform((observable) => {
     let values: T[] = [];

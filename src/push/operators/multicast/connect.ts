@@ -1,5 +1,3 @@
-import { shallow } from 'merge-strategies';
-
 import { Push } from '@definitions';
 import { transform } from '../../utils/transform';
 import { share } from './share';
@@ -16,7 +14,7 @@ export interface ConnectOptions {
 export function connect<T>(
   options?: ConnectOptions
 ): Push.Transformation<T, Push.Observable<T>> {
-  const opts = shallow({ replay: 0 }, options || undefined);
+  const opts = { replay: options?.replay || 0 };
 
   return transform((observable) => {
     const res = share<T>({ policy: 'keep-open', replay: opts.replay })(

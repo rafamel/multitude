@@ -1,5 +1,4 @@
 import { TypeGuard } from 'type-core';
-import { shallow } from 'merge-strategies';
 
 import { Push } from '@definitions';
 import { Observable } from '../classes/Observable';
@@ -9,7 +8,7 @@ export type FromEventOptions =
   | { source: EventTarget; type: string; capture?: boolean };
 
 export function fromEvent(options: FromEventOptions): Push.Observable {
-  const opts = shallow({ capture: false }, options || undefined);
+  const opts = { capture: false, ...options };
   const { source, type, capture } = opts;
 
   if (TypeGuard.isEventTarget(source)) {

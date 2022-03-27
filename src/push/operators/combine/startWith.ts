@@ -1,5 +1,4 @@
 import { NullaryFn, TypeGuard, UnaryFn } from 'type-core';
-import { shallow } from 'merge-strategies';
 
 import { Push } from '@definitions';
 import { Observable } from '../../classes/Observable';
@@ -14,7 +13,9 @@ export function startWith<T, U>(
   values: Iterable<U> | NullaryFn<Iterable<U>>,
   options?: StartWithOptions
 ): Push.Operation<T, T | U> {
-  const opts = shallow({ strategy: 'always' }, options || undefined);
+  const opts = {
+    strategy: options?.strategy || 'always'
+  };
 
   const next = TypeGuard.isIterable(values)
     ? (fn: UnaryFn<U>) => {
