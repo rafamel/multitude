@@ -2,113 +2,88 @@ import assert from 'node:assert';
 import { test } from '@jest/globals';
 
 import { interval } from '@push';
-import { Util } from '@helpers';
 
-test(`succeeds wo/ arguments`, async () => {
-  const obs = interval();
-
-  let errorCalled = false;
-  const values: any[] = [];
-  const subscription = obs.subscribe({
-    next: (value) => values.push(value),
-    error: () => (errorCalled = true)
-  });
-
-  await new Promise((resolve) => setTimeout(resolve, 100));
-  subscription.unsubscribe();
-
-  assert(!errorCalled);
-  assert(values[0] === 0);
-});
 test(`succeeds w/ every`, async () => {
   const obs = interval(300);
 
-  let errorCalled = false;
   const values: any[] = [];
   const subscription = obs.subscribe({
-    next: (value) => values.push(value),
-    error: () => (errorCalled = true)
+    next: (value) => values.push(value)
   });
 
   await new Promise((resolve) => setTimeout(resolve, 1650));
   subscription.unsubscribe();
 
-  assert(!errorCalled);
   assert.deepStrictEqual(values, [0, 1, 2, 3, 4]);
 });
-test(`succeeds w/ every, cancel (callback success)`, async () => {
-  const obs = interval({ every: 300, cancel: (i) => i >= 4 });
+test(`succeeds w/ every, cancel (no cancellation)`, async () => {
+  const controller = new AbortController();
+  const obs = interval({ every: 300, cancel: controller.signal });
 
-  let errorCalled = false;
   const values: any[] = [];
   const subscription = obs.subscribe({
-    next: (value) => values.push(value),
-    error: () => (errorCalled = true)
+    next: (value) => values.push(value)
   });
 
   await new Promise((resolve) => setTimeout(resolve, 2250));
   subscription.unsubscribe();
 
-  assert(!errorCalled);
-  assert.deepStrictEqual(values, [0, 1, 2, 3, 4]);
+  assert.deepStrictEqual(values, [0, 1, 2, 3, 4, 5, 6]);
 });
-test(`succeeds w/ every, cancel (callback failure)`, async () => {
+test(`succeeds w/ every, cancel (pre sync cancellation)`, async () => {
+  const controller = new AbortController();
+
+  controller.abort();
   const obs = interval({
     every: 300,
-    cancel: () => Util.throws(new Error('foo'))
+    cancel: controller.signal
   });
 
-  let errorCalled = false;
   const values: any[] = [];
   const subscription = obs.subscribe({
-    next: (value) => values.push(value),
-    error: () => (errorCalled = true)
+    next: (value) => values.push(value)
   });
 
   await new Promise((resolve) => setTimeout(resolve, 450));
   subscription.unsubscribe();
 
-  assert(errorCalled);
-  assert.deepStrictEqual(values, [0]);
+  assert.deepStrictEqual(values, []);
 });
-test(`succeeds w/ every, cancel (Promise resolution)`, async () => {
+test(`succeeds w/ every, cancel (post sync cancellation)`, async () => {
+  const controller = new AbortController();
+
   const obs = interval({
     every: 300,
-    cancel: new Promise((resolve) => setTimeout(resolve, 1650))
+    cancel: controller.signal
   });
+  controller.abort();
 
-  let errorCalled = false;
   const values: any[] = [];
   const subscription = obs.subscribe({
-    next: (value) => values.push(value),
-    error: () => (errorCalled = true)
+    next: (value) => values.push(value)
+  });
+
+  await new Promise((resolve) => setTimeout(resolve, 450));
+  subscription.unsubscribe();
+
+  assert.deepStrictEqual(values, []);
+});
+test(`succeeds w/ every, cancel (async cancellation)`, async () => {
+  const controller = new AbortController();
+  setTimeout(() => controller.abort(), 1650);
+
+  const obs = interval({
+    every: 300,
+    cancel: controller.signal
+  });
+
+  const values: any[] = [];
+  const subscription = obs.subscribe({
+    next: (value) => values.push(value)
   });
 
   await new Promise((resolve) => setTimeout(resolve, 2250));
   subscription.unsubscribe();
 
-  assert(!errorCalled);
-  assert.deepStrictEqual(values, [0, 1, 2, 3, 4]);
-});
-test(`succeeds w/ every, cancel (Promise rejection)`, async () => {
-  const obs = interval({
-    every: 300,
-    // eslint-disable-next-line promise/param-names
-    cancel: new Promise((_, reject) => {
-      setTimeout(() => reject(new Error('foo')), 1650);
-    })
-  });
-
-  let errorCalled = false;
-  const values: any[] = [];
-  const subscription = obs.subscribe({
-    next: (value) => values.push(value),
-    error: () => (errorCalled = true)
-  });
-
-  await new Promise((resolve) => setTimeout(resolve, 2250));
-  subscription.unsubscribe();
-
-  assert(errorCalled);
   assert.deepStrictEqual(values, [0, 1, 2, 3, 4]);
 });

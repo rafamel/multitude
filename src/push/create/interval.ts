@@ -1,51 +1,37 @@
-import { UnaryFn, TypeGuard } from 'type-core';
 import { Push } from '@definitions';
+import { TypeGuard } from 'type-core';
 import { Observable } from '../classes/Observable';
 
 export interface IntervalOptions {
-  every?: number;
-  cancel?: UnaryFn<number, boolean> | PromiseLike<void>;
+  every: number;
+  cancel?: AbortSignal;
 }
 
 export function interval(
-  every?: number | IntervalOptions
+  every: number | IntervalOptions
 ): Push.Observable<number> {
-  const options = !every || TypeGuard.isNumber(every) ? { every } : every;
-
-  const cancel = options.cancel;
-  const promise = TypeGuard.isPromiseLike(cancel) ? cancel : null;
-  const callback = TypeGuard.isFunction(cancel) ? cancel : null;
+  const opts = TypeGuard.isNumber(every) ? { every } : every || {};
 
   return new Observable((obs) => {
     let index = -1;
+
     const interval = setInterval(() => {
       index++;
       obs.next(index);
+    }, Math.max(0, opts.every || 0));
 
-      if (!callback) return;
-      try {
-        if (callback(index)) {
-          obs.complete();
-          clearInterval(interval);
-        }
-      } catch (err) {
-        obs.error(err as Error);
-      }
-    }, options.every || 0);
-
-    if (promise) {
-      promise.then(
-        () => {
-          clearInterval(interval);
-          obs.complete();
-        },
-        (err) => {
-          clearInterval(interval);
-          obs.error(err);
-        }
-      );
+    function cancel(): void {
+      clearInterval(interval);
+      obs.complete();
     }
 
-    return () => clearInterval(interval);
+    if (opts.cancel) {
+      if (opts.cancel.aborted) cancel();
+      else opts.cancel.addEventListener('abort', cancel);
+    }
+    return () => {
+      clearInterval(interval);
+      if (opts.cancel) opts.cancel.removeEventListener('abort', cancel);
+    };
   });
 }
