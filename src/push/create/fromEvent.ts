@@ -1,21 +1,16 @@
 import { TypeGuard } from 'type-core';
+import { shallow } from 'merge-strategies';
 import { Push } from '@definitions';
 import { Observable } from '../classes/Observable';
 
-export function fromEvent<T>(
-  source: NodeJS.EventEmitter,
-  name: string | symbol
-): Push.Observable<T>;
-export function fromEvent(
-  source: EventTarget,
-  name: string,
-  capture?: boolean
-): Push.Observable<Event>;
-export function fromEvent(
-  source: NodeJS.EventEmitter | EventTarget,
-  name: string | symbol,
-  capture?: boolean
-): Push.Observable {
+export type FromEventOptions =
+  | { source: NodeJS.EventEmitter; type: string | symbol }
+  | { source: EventTarget; type: string; capture?: boolean };
+
+export function fromEvent(options: FromEventOptions): Push.Observable {
+  const opts = shallow({ capture: false }, options || undefined);
+  const { source, type, capture } = opts;
+
   if (TypeGuard.isEventTarget(source)) {
     return new Observable<Event>((obs) => {
       function listener(event: Event): void {
@@ -23,12 +18,12 @@ export function fromEvent(
       }
 
       try {
-        source.addEventListener(name as string, listener, capture);
+        source.addEventListener(type as string, listener, capture);
       } catch (error) {
         obs.error(error as Error);
       }
 
-      return () => source.removeEventListener(name as string, listener);
+      return () => source.removeEventListener(type as string, listener);
     });
   }
 
@@ -39,12 +34,12 @@ export function fromEvent(
       }
 
       try {
-        source.addListener(name, listener);
+        source.addListener(type, listener);
       } catch (error) {
         obs.error(error as Error);
       }
 
-      return () => source.removeListener(name, listener);
+      return () => source.removeListener(type, listener);
     });
   }
 
