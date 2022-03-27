@@ -1,11 +1,10 @@
 import assert from 'node:assert';
 import { test } from '@jest/globals';
-import { into } from 'pipettes';
 
-import { Observable, trail } from '@push';
+import { Observable, push, trail } from '@push';
 
 test(`succeeds w/ default`, () => {
-  const obs = into(
+  const obs = push(
     new Observable<number>((obs) => {
       obs.next(1);
       obs.next(2);
@@ -27,7 +26,7 @@ test(`succeeds w/ default`, () => {
   ]);
 });
 test(`succeeds w/ custom`, () => {
-  const obs = into(
+  const obs = push(
     new Observable<number>((obs) => {
       obs.next(1);
       obs.next(2);

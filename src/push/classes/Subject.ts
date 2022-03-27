@@ -1,8 +1,8 @@
 import { Empty, NullaryFn, UnaryFn } from 'type-core';
-import { into } from 'pipettes';
 
 import { Push } from '@definitions';
 import { Globals } from '@helpers';
+import { push } from '../utils/push';
 import { from } from '../create/from';
 import { tap } from '../operators/tap';
 import { Observable } from './Observable';
@@ -50,7 +50,7 @@ export class Subject<T = any, U extends T | void = T | void>
     const subject = new this<T, U>(options);
 
     let subscription: null | Push.Subscription = null;
-    into(observable, tap({ start: (subs) => (subscription = subs) })).subscribe(
+    push(observable, tap({ start: (subs) => (subscription = subs) })).subscribe(
       subject
     );
 

@@ -1,12 +1,11 @@
 import assert from 'node:assert';
 import { test } from '@jest/globals';
-import { into } from 'pipettes';
 
-import { Observable, distinct } from '@push';
+import { Observable, push, distinct } from '@push';
 
 test(`succeeds w/ default selector`, () => {
   const arr = [1, {}, 'b', {}];
-  const obs = into(
+  const obs = push(
     new Observable<any>((obs) => {
       obs.next(arr[0]);
       obs.next(arr[1]);
@@ -27,7 +26,7 @@ test(`succeeds w/ default selector`, () => {
 });
 test(`succeeds w/ custom selector (1)`, () => {
   const arr = [1, {}, 'b', {}];
-  const obs = into(
+  const obs = push(
     new Observable<any>((obs) => {
       obs.next(arr[0]);
       obs.next(arr[1]);
@@ -57,7 +56,7 @@ test(`succeeds w/ custom selector (1)`, () => {
 });
 test(`succeeds w/ custom selector (2)`, () => {
   const arr = [1, {}, 'b', {}];
-  const obs = into(
+  const obs = push(
     new Observable<any>((obs) => {
       obs.next(arr[0]);
       obs.next(arr[1]);

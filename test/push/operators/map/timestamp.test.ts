@@ -1,11 +1,10 @@
 import assert from 'node:assert';
 import { test } from '@jest/globals';
-import { into } from 'pipettes';
 
-import { Observable, timestamp } from '@push';
+import { Observable, push, timestamp } from '@push';
 
 test(`succeeds`, () => {
-  const obs = into(
+  const obs = push(
     new Observable<number>((obs) => {
       obs.next(1);
       obs.next(2);

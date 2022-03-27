@@ -1,11 +1,10 @@
 import assert from 'node:assert';
 import { test } from '@jest/globals';
-import { into } from 'pipettes';
 
-import { Observable, take } from '@push';
+import { Observable, push, take } from '@push';
 
 test(`succeeds w/ count (1)`, () => {
-  const obs = into(
+  const obs = push(
     new Observable<number>((obs) => {
       obs.next(1);
       obs.next(2);
@@ -24,7 +23,7 @@ test(`succeeds w/ count (1)`, () => {
   assert.deepStrictEqual(values, [1, 2, 3]);
 });
 test(`succeeds w/ count (2)`, () => {
-  const obs = into(
+  const obs = push(
     new Observable<number>((obs) => {
       obs.next(1);
       obs.next(2);
@@ -43,7 +42,7 @@ test(`succeeds w/ count (2)`, () => {
   assert.deepStrictEqual(values, [1, 2, 3]);
 });
 test(`succeeds w/ while (value)`, () => {
-  const obs = into(
+  const obs = push(
     new Observable<number>((obs) => {
       obs.next(1);
       obs.next(2);
@@ -64,7 +63,7 @@ test(`succeeds w/ while (value)`, () => {
   assert.deepStrictEqual(values, [1, 2]);
 });
 test(`succeeds w/ while (index)`, () => {
-  const obs = into(
+  const obs = push(
     new Observable<number>((obs) => {
       obs.next(1);
       obs.next(2);
@@ -83,7 +82,7 @@ test(`succeeds w/ while (index)`, () => {
   assert.deepStrictEqual(values, [1, 2, 3]);
 });
 test(`succeeds w/ count + while (1)`, () => {
-  const obs = into(
+  const obs = push(
     new Observable<number>((obs) => {
       obs.next(1);
       obs.next(2);
@@ -104,7 +103,7 @@ test(`succeeds w/ count + while (1)`, () => {
   assert.deepStrictEqual(values, [1, 2, 3, 4]);
 });
 test(`succeeds w/ count + while (2)`, () => {
-  const obs = into(
+  const obs = push(
     new Observable<number>((obs) => {
       obs.next(1);
       obs.next(2);

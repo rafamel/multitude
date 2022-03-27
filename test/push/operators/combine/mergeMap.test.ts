@@ -1,12 +1,11 @@
 import assert from 'node:assert';
 import { test } from '@jest/globals';
-import { into } from 'pipettes';
 
-import { mergeMap, Observable } from '@push';
+import { Observable, push, mergeMap } from '@push';
 
 test(`succeeds: inner error (sync)`, () => {
   const times = [0, 0, 0, 0, 0, 0];
-  const obs = into(
+  const obs = push(
     new Observable<number>((obs) => {
       obs.next(10);
       obs.next(20);
@@ -48,7 +47,7 @@ test(`succeeds: inner error (async)`, async () => {
   const values: any[] = [];
   const times = [0, 0, 0, 0, 0, 0];
 
-  const obs = into(
+  const obs = push(
     new Observable<number>((obs) => {
       obs.next(10);
       obs.next(20);
@@ -90,7 +89,7 @@ test(`succeeds: inner error (async)`, async () => {
 });
 test(`succeeds: outer error (sync)`, () => {
   const times = [0, 0, 0, 0, 0, 0];
-  const obs = into(
+  const obs = push(
     new Observable<number>((obs) => {
       obs.next(10);
       obs.next(20);
@@ -129,7 +128,7 @@ test(`succeeds: outer error (sync)`, () => {
 });
 test(`succeeds: outer error (async)`, async () => {
   const times = [0, 0, 0, 0, 0, 0];
-  const obs = into(
+  const obs = push(
     new Observable<number>((obs) => {
       obs.next(10);
       obs.next(20);
@@ -170,7 +169,7 @@ test(`succeeds: outer error (async)`, async () => {
 });
 test(`succeeds: complete (sync)`, () => {
   const times = [0, 0, 0, 0, 0, 0];
-  const obs = into(
+  const obs = push(
     new Observable<number>((obs) => {
       obs.next(10);
       obs.next(20);
@@ -204,7 +203,7 @@ test(`succeeds: complete (sync)`, () => {
 });
 test(`succeeds: complete (async)`, async () => {
   const times = [0, 0, 0, 0, 0, 0];
-  const obs = into(
+  const obs = push(
     new Observable<number>((obs) => {
       obs.next(10);
       obs.next(20);
@@ -246,7 +245,7 @@ test(`succeeds: complete (async)`, async () => {
 });
 test(`succeeds: unsubscribe`, () => {
   const times = [0, 0, 0, 0, 0, 0];
-  const obs = into(
+  const obs = push(
     new Observable<number>((obs) => {
       obs.next(10);
       obs.next(20);

@@ -1,7 +1,7 @@
 import { Dictionary } from 'type-core';
-import { into } from 'pipettes';
 
 import { Push } from '@definitions';
+import { push } from '../utils/push';
 import { intercept } from '../utils/intercept';
 import { Observable } from '../classes/Observable';
 import { map } from '../operators/map/map';
@@ -69,7 +69,7 @@ export function combine(observables: any): Push.Observable {
   if (!observables) return combineList();
 
   if (Array.isArray(observables)) {
-    return into(
+    return push(
       combineList(observables),
       map((current: any[]) => Array.from(current))
     );
@@ -82,7 +82,7 @@ export function combine(observables: any): Push.Observable {
     dict[list.length] = key;
     list.push(obs);
   }
-  return into(
+  return push(
     combineList(list),
     map((current: any[]) => {
       return Object.fromEntries(current.map((value, i) => [dict[i], value]));
@@ -98,14 +98,14 @@ function combineList(arr?: Push.Convertible[]): Push.Observable<any[]> {
 
   const observables: Push.Observable[] = arr.map((x) => from(x));
   if (observables.length === 1) {
-    return into(
+    return push(
       observables[0],
       map((value) => [value])
     );
   }
 
   const sources = observables.map((obs, i): Push.Observable<[number, any]> => {
-    return into(
+    return push(
       from(obs),
       map((value) => [i, value])
     );

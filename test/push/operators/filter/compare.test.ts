@@ -1,13 +1,12 @@
 import assert from 'node:assert';
 import { test } from '@jest/globals';
-import { into } from 'pipettes';
 
-import { compare, from } from '@push';
+import { push, from, compare } from '@push';
 
 test(`succeeds w/ strict strategy`, () => {
   const obj = {};
   const arr = [1, 1, 2, 1, {}, {}, obj, obj, obj, 'a', 'b', 'a'];
-  const obs = into(from(arr), compare());
+  const obs = push(from(arr), compare());
 
   const values: any[] = [];
   obs.subscribe((x) => values.push(x));
@@ -34,7 +33,7 @@ test(`succeeds w/ shallow strategy`, () => {
     { foo: {} },
     { foo: {} }
   ];
-  const obs = into(from(arr), compare('shallow'));
+  const obs = push(from(arr), compare('shallow'));
 
   const values: any[] = [];
   obs.subscribe((x) => values.push(x));
@@ -51,7 +50,7 @@ test(`succeeds w/ deep strategy`, () => {
     { foo: {} },
     { foo: {} }
   ];
-  const obs = into(from(arr), compare('deep'));
+  const obs = push(from(arr), compare('deep'));
 
   const values: any[] = [];
   obs.subscribe((x) => values.push(x));
@@ -59,7 +58,7 @@ test(`succeeds w/ deep strategy`, () => {
   assert.deepStrictEqual(values, [arr[0], arr[2], arr[3], arr[5]]);
 });
 test(`succeeds w/ custom compare`, () => {
-  const obs = into(
+  const obs = push(
     from([10, 4, 10]),
     compare<number>((a, b) => a - b !== 0)
   );

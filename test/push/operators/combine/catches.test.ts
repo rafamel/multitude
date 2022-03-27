@@ -1,13 +1,12 @@
 import assert from 'node:assert';
 import { test } from '@jest/globals';
-import { into } from 'pipettes';
 
-import { catches, Observable } from '@push';
+import { Observable, push, catches } from '@push';
 
 test(`non error flow succeeds`, async () => {
   let catchesCalled = false;
 
-  const obs = into(
+  const obs = push(
     new Observable<number>((obs) => {
       obs.next(1);
       obs.next(2);
@@ -43,7 +42,7 @@ test(`error flow succeeds, error finalization`, async () => {
   const args: any[] = [];
   const teardownCalled = [false, false];
   let teardownCalledBeforeNextSubscription = false;
-  const obs = into(
+  const obs = push(
     new Observable<number>((obs) => {
       obs.next(1);
       obs.next(2);
@@ -96,7 +95,7 @@ test(`error flow succeeds, error finalization`, async () => {
 test(`error flow succeeds, unsubscribe finalization`, async () => {
   const args: any[] = [];
   const teardownCalled = [false, false];
-  const obs = into(
+  const obs = push(
     new Observable<number>((obs) => {
       obs.next(1);
       obs.next(2);

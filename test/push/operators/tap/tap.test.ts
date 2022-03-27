@@ -1,13 +1,12 @@
 import assert from 'node:assert';
 import { test } from '@jest/globals';
-import { into } from 'pipettes';
 
-import { Observable, Subscription, tap } from '@push';
+import { Observable, Subscription, push, tap } from '@push';
 
 test(`Observer.start`, () => {
   let pass = false;
 
-  const obs = into(
+  const obs = push(
     new Observable<number>(() => undefined),
     tap({
       start(subscription) {
@@ -23,7 +22,7 @@ test(`Observer.next`, () => {
   const times = [0, 0];
   const values: [any[], any[]] = [[], []];
 
-  const obs = into(
+  const obs = push(
     new Observable<number>((obs) => {
       obs.next(1);
       obs.next(2);
@@ -56,7 +55,7 @@ test(`Observer.error`, () => {
   const values: [Error[], Error[]] = [[], []];
 
   const error = new Error('foo');
-  const obs = into(
+  const obs = push(
     new Observable<number>((obs) => {
       obs.error(error);
     }),
@@ -81,7 +80,7 @@ test(`Observer.error`, () => {
 test(`Observer.complete`, () => {
   const times = [0, 0];
 
-  const obs = into(
+  const obs = push(
     new Observable<number>((obs) => {
       obs.complete();
     }),

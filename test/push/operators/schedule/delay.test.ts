@@ -1,12 +1,11 @@
 import assert from 'node:assert';
 import { test } from '@jest/globals';
-import { into } from 'pipettes';
 
-import { delay, Observable } from '@push';
+import { Observable, push, delay } from '@push';
 
 test(`succeeds (error, 1)`, async () => {
   const error = new Error('foo');
-  const obs = into(
+  const obs = push(
     new Observable<any>((obs) => {
       obs.next(1);
       setTimeout(() => {
@@ -32,7 +31,7 @@ test(`succeeds (error, 1)`, async () => {
 });
 test(`succeeds (error, 2)`, async () => {
   const error = new Error('foo');
-  const obs = into(
+  const obs = push(
     new Observable<any>((obs) => {
       obs.next(1);
       obs.next(2);
@@ -56,7 +55,7 @@ test(`succeeds (error, 2)`, async () => {
 });
 test(`succeeds (error, 3)`, async () => {
   const error = new Error('foo');
-  const obs = into(
+  const obs = push(
     new Observable<any>((obs) => {
       obs.next(1);
       obs.next(2);
@@ -81,7 +80,7 @@ test(`succeeds (error, 3)`, async () => {
   assert.deepStrictEqual(values, [1, 2, error]);
 });
 test(`succeeds (complete, 1)`, async () => {
-  const obs = into(
+  const obs = push(
     new Observable<any>((obs) => {
       obs.next(1);
       setTimeout(() => {
@@ -109,7 +108,7 @@ test(`succeeds (complete, 1)`, async () => {
   assert.deepStrictEqual(values, [1, 2]);
 });
 test(`succeeds (complete, 2)`, async () => {
-  const obs = into(
+  const obs = push(
     new Observable<any>((obs) => {
       obs.next(1);
       obs.next(2);
@@ -135,7 +134,7 @@ test(`succeeds (complete, 2)`, async () => {
   assert.deepStrictEqual(values, [1, 2]);
 });
 test(`succeeds (complete, 3)`, async () => {
-  const obs = into(
+  const obs = push(
     new Observable<any>((obs) => {
       obs.next(1);
       obs.next(2);
@@ -163,7 +162,7 @@ test(`succeeds (complete, 3)`, async () => {
   assert.deepStrictEqual(values, [1, 2]);
 });
 test(`succeeds (unsubscribe)`, async () => {
-  const obs = into(
+  const obs = push(
     new Observable<any>((obs) => {
       obs.next(1);
       obs.next(2);
@@ -185,7 +184,7 @@ test(`succeeds (unsubscribe)`, async () => {
 });
 test(`succeeds w/ signals (error, 1)`, async () => {
   const error = new Error('foo');
-  const obs = into(
+  const obs = push(
     new Observable<any>((obs) => {
       obs.next(1);
       obs.next(2);
@@ -211,7 +210,7 @@ test(`succeeds w/ signals (error, 1)`, async () => {
 });
 test(`succeeds w/ signals (error, 2)`, async () => {
   const error = new Error('foo');
-  const obs = into(
+  const obs = push(
     new Observable<any>((obs) => {
       obs.next(1);
       obs.next(2);
@@ -236,7 +235,7 @@ test(`succeeds w/ signals (error, 2)`, async () => {
   assert.deepStrictEqual(values, [1, 2, error]);
 });
 test(`succeeds w/ signals (complete, 1)`, async () => {
-  const obs = into(
+  const obs = push(
     new Observable<any>((obs) => {
       obs.next(1);
       obs.next(2);
@@ -264,7 +263,7 @@ test(`succeeds w/ signals (complete, 1)`, async () => {
   assert.deepStrictEqual(values, [1, 2]);
 });
 test(`succeeds w/ signals (complete, 2)`, async () => {
-  const obs = into(
+  const obs = push(
     new Observable<any>((obs) => {
       obs.next(1);
       obs.next(2);
@@ -298,7 +297,7 @@ test(`succeeds w/ condition`, async () => {
   setTimeout(() => (doDelay = false), 550);
 
   const checks: Array<[any, number]> = [];
-  const obs = into(
+  const obs = push(
     new Observable<any>((obs) => {
       obs.next(1);
       setTimeout(() => obs.next(2), 150);
