@@ -1,7 +1,7 @@
 import assert from 'node:assert';
 import { test } from '@jest/globals';
 
-import { Observable, push, timestamp } from '@push';
+import { Observable, push, timestamps } from '@push';
 
 test(`succeeds`, () => {
   const obs = push(
@@ -9,7 +9,7 @@ test(`succeeds`, () => {
       obs.next(1);
       obs.next(2);
     }),
-    timestamp()
+    timestamps()
   );
 
   const before = Date.now();

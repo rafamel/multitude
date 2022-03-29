@@ -6,7 +6,7 @@ export interface Timestamp<T> {
   timestamp: number;
 }
 
-export function timestamp<T>(): Push.Operation<T, Timestamp<T>> {
+export function timestamps<T>(): Push.Operation<T, Timestamp<T>> {
   return operate<T, Timestamp<T>>((obs) => {
     return {
       next(value: T): void {

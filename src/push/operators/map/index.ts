@@ -1,4 +1,5 @@
 export * from './group';
 export * from './map';
-export * from './timestamp';
+export * from './results';
+export * from './timestamps';
 export * from './trail';
