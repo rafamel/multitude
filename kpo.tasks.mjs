@@ -10,13 +10,12 @@ export default recreate({ announce: true }, () => {
     docs: riseup.tasks.docs,
     fix: riseup.tasks.fix,
     lint: series(riseup.tasks.lintmd, riseup.tasks.lint),
-    test: series(
-      context(
-        { args: ['test/es-observable/specification'] },
-        riseup.tasks.node
-      ),
-      riseup.tasks.test
+    test: create(() => series(tasks['test:spec'], tasks['test:suite'])),
+    'test:spec': context(
+      { args: ['test/es-observable/specification'] },
+      riseup.tasks.node
     ),
+    'test:suite': riseup.tasks.test,
     commit: riseup.tasks.commit,
     release: context({ args: ['--no-verify'] }, riseup.tasks.release),
     distribute: riseup.tasks.distribute,

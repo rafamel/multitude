@@ -52,6 +52,8 @@
     "fix": "kpo fix --",
     "lint": "kpo lint --",
     "test": "kpo test --",
+    "test:spec": "kpo test:spec --",
+    "test:suite": "kpo test:suite --",
     "commit": "kpo commit --",
     "release": "kpo release --",
     "distribute": "kpo distribute --",
