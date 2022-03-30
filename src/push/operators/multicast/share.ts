@@ -1,9 +1,8 @@
 import { Push } from '@definitions';
-import { transform } from '../../utils/transform';
-import { Observable } from '../../classes/Observable';
+import { Multicast } from '../../classes/Multicast';
 
 /**
- * 'on-demand': Default policy. Subscribes and re-subscribes to the original Observable once the resulting one has open subscriptions, so long as the original Observable hasn't errored or completed on previous subscriptions. Unsubscribes from the original Observable once the resulting Observable has no active subscriptions.
+ * 'on-demand': Subscribes and re-subscribes to the original Observable once the resulting one has open subscriptions, so long as the original Observable hasn't errored or completed on previous subscriptions. Unsubscribes from the original Observable once the resulting Observable has no active subscriptions.
  * 'keep-open': Keeps the parent subscription open even if it has no current subscriptions.
  * 'keep-closed': Permanently unsubscribes from the original Observable once the resulting one has no active subscriptions. Subsequent subscriptions will error or complete immediately with the same signal as the original Observable if it finalized before being unsubscribed, or otherwise error.
  */
@@ -18,69 +17,65 @@ export interface ShareOptions {
  * The original Observable won't be subscribed until there is at least
  * one subscriber.
  */
-export function share<T>(
+export function share<T, U extends T | void = T | void>(
   policy: SharePolicy,
   options?: ShareOptions
-): Push.Transformation<T, Push.Observable<T>> {
-  return transform((observable) => {
-    let values: T[] = [];
-    let subscription: null | Push.Subscription = null;
-    let termination: null | { error: any; complete: boolean } = null;
-    const observers: Set<Push.SubscriptionObserver> = new Set();
+): Push.Transformation<T, Push.Multicast<T, U>> {
+  const replay = options?.replay || 0;
 
-    return new Observable<T>((obs) => {
-      if (termination) {
-        return termination.complete
-          ? obs.complete()
-          : obs.error(termination.error);
-      }
-
-      observers.add(obs);
-      for (const value of values) obs.next(value);
-
-      if (!subscription) {
-        observable.subscribe({
-          start(subs) {
-            subscription = subs;
-          },
-          next(value) {
-            if (options?.replay && options.replay > 0) {
-              values.push(value);
-              if (options.replay < values.length) values.shift();
-            }
-            for (const obs of observers) obs.next(value);
-          },
-          error(err) {
-            termination = { error: err, complete: false };
-            for (const obs of observers) obs.error(err);
-          },
-          complete() {
-            termination = { error: null, complete: true };
-            for (const obs of observers) obs.complete();
-          }
+  return (convertible) => {
+    switch (policy) {
+      case 'keep-open': {
+        return Multicast.from(convertible, ({ event }) => {
+          return { connect: event !== 'start', replay };
         });
       }
+      case 'keep-closed': {
+        let didDisconnect = false;
+        return Multicast.from(
+          convertible,
+          ({ event, source, subscriptions }) => {
+            if (source === 'error' || source === 'complete') {
+              return { connect: true, replay };
+            }
 
-      return () => {
-        observers.delete(obs);
-
-        if (observers.size > 0) return;
-
-        values = [];
-        if (policy === 'keep-open') return;
-        if (policy === 'keep-closed') {
-          if (!termination) {
-            termination = {
-              error: new Error('Shared observable was already closed'),
-              complete: false
-            };
+            switch (event) {
+              case 'start': {
+                return { connect: false, replay };
+              }
+              case 'subscribe': {
+                return { connect: !didDisconnect, replay };
+              }
+              default: {
+                const connect = subscriptions - 1 > 0;
+                if (!connect) didDisconnect = true;
+                return { connect, replay };
+              }
+            }
           }
-          subscription?.unsubscribe();
-        } else {
-          subscription?.unsubscribe();
-          subscription = null;
-        }
-      };
-    });
-  });
+        );
+      }
+      default: {
+        return Multicast.from(
+          convertible,
+          ({ event, source, subscriptions }) => {
+            if (source === 'error' || source === 'complete') {
+              return { connect: true, replay };
+            }
+            switch (event) {
+              case 'start': {
+                return { connect: false, replay };
+              }
+              case 'subscribe': {
+                return { connect: true, replay };
+              }
+              default: {
+                return { connect: subscriptions - 1 > 0, replay };
+              }
+            }
+          }
+        );
+      }
+    }
+  };
 }
